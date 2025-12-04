@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <title>Production Management</title>
+
+  <!-- Optional: nicer font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-main: #5b3fd9;
+      --bg-main-light: #7950f2;
+      --bg-soft: #f5f3ff;
+      --card-bg: #ffffff;
+      --accent: #ff7b7b;
+      --accent-2: #ffb347;
+      --accent-3: #4cc9f0;
+      --text-main: #1f1f2e;
+      --text-soft: #6c6c80;
+      --border-soft: #e3e3ff;
+      --radius-lg: 18px;
+      --radius-xl: 26px;
+      --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.18);
+      --shadow-card: 0 10px 25px rgba(15, 23, 42, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px 12px 40px;
+      min-height: 100vh;
+      font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #9f7aea 0, #5b3fd9 35%, #141427 100%);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    header {
+      max-width: 1100px;
+      margin: 0 auto 14px;
+      padding: 18px 26px;
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, #1f1f3b 0%, #2a1963 35%, #4b2bbf 65%, #ff7b7b 100%);
+      color: #fff;
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(255,255,255,0.16) 0, transparent 60%),
+        radial-gradient(circle at 80% 0%, rgba(255,255,255,0.10) 0, transparent 55%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    header > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    header span.app-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    header span.app-title::before {
+      content: "🏭";
+      width: 34px;
+      height: 34px;
+      border-radius: 14px;
+      background: radial-gradient(circle at 30% 0, #ffe066 0, #ff922b 45%, #c92a2a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+      font-size: 18px;
+    }
+
+    header .subtitle {
+      font-size: 12px;
+      color: rgba(248,249,255,0.82);
+    }
+
+    header .pill {
+      margin-left: auto;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.35);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    header .pill::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 0 4px rgba(74,222,128,0.33);
+    }
+
+    /* TABS BAR */
+    .tabs {
+      max-width: 1100px;
+      margin: 0 auto;
+      margin-bottom: 12px;
+      padding: 6px;
+      background: linear-gradient(135deg, #f5f3ff 0%, #e0e7ff 100%);
+      border-radius: 999px;
+      display: flex;
+      gap: 6px;
+      box-shadow: var(--shadow-card);
+      position: relative;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px 10px;
+      border-radius: 999px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: #4c4f72;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.18s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .tab::before {
+      font-size: 15px;
+    }
+
+    .tab[data-target="products"]::before { content: "📦"; }
+    .tab[data-target="machines"]::before { content: "⚙️"; }
+    .tab[data-target="prodlog"]::before { content: "📋"; }
+
+    .tab.active {
+      background: linear-gradient(135deg, #5b3fd9 0%, #9f7aea 60%, #ffb347 100%);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(88, 63, 217, 0.55);
+      transform: translateY(-1px);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      margin-top: 4px;
+    }
+
+    .status-bar {
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: #e5e9ff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.35);
+      display: inline-flex;
+      min-height: 20px;
+      align-items: center;
+    }
+
+    .form-section,
+    .table-section {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px 14px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-card);
+      border: 1px solid rgba(226,232,255,0.8);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-section::before,
+    .table-section::before {
+      content: "";
+      position: absolute;
+      inset: -40% -60%;
+      opacity: 0.14;
+      background:
+        radial-gradient(circle at 0 0, #ffb347 0, transparent 55%),
+        radial-gradient(circle at 100% 0, #4cc9f0 0, transparent 50%);
+      pointer-events: none;
+    }
+
+    .form-section > * ,
+    .table-section > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    h3, h4 {
+      margin: 0 0 10px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 16px;
+    }
+
+    h3::after,
+    h4::after {
+      content: "";
+      flex: 1;
+      margin-left: 12px;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(91,63,217,0.2) 0%, rgba(255,179,71,0.2) 100%);
+    }
+
+    h3::before {
+      content: "📁";
+      font-size: 17px;
+    }
+    #tab-prodlog h3::before { content: "📝"; }
+    #tab-machines h3::before { content: "⚙️"; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 10px 18px;
+      margin-top: 6px;
+    }
+
+    label {
+      font-size: 11px;
+      color: var(--text-soft);
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 9px;
+      border: 1px solid var(--border-soft);
+      font-size: 13px;
+      outline: none;
+      background: #fbfbff;
+      transition: all 0.16s ease;
+    }
+
+    input::placeholder {
+      color: #b4b5ca;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #5b3fd9;
+      box-shadow: 0 0 0 1px rgba(91,63,217,0.2);
+      background: #ffffff;
+    }
+
+    button {
+      padding: 8px 14px;
+      font-size: 13px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.16s ease;
+      font-weight: 500;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, #5b3fd9 0%, #9f7aea 45%, #ff7b7b 100%);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(75,56,187,0.45);
+    }
+
+    button.primary::before {
+      content: "💾";
+      font-size: 14px;
+    }
+
+    button.secondary {
+      background: #f1f3ff;
+      color: #4c4f72;
+      border: 1px solid #d0d4ff;
+    }
+
+    button.primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(75,56,187,0.55);
+      filter: brightness(1.03);
+    }
+
+    button.secondary:hover {
+      background: #e4e7ff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 6px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    thead {
+      background: linear-gradient(135deg, #5b3fd9 0%, #9f7aea 50%, #ff7b7b 100%);
+      color: #fff;
+    }
+
+    th, td {
+      padding: 7px 9px;
+      text-align: left;
+      border-bottom: 1px solid #edf2ff;
+    }
+
+    th {
+      font-weight: 500;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fafaff;
+    }
+
+    tbody tr:hover {
+      background: #eef1ff;
+    }
+
+    .actions button {
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 999px;
+      border: none;
+      box-shadow: none;
+    }
+
+    .actions button:first-child {
+      background: #e0f2fe;
+      color: #1d4ed8;
+    }
+
+    .actions button:last-child {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* Footer badge */
+    .footer-badge {
+      max-width: 1100px;
+      margin: 6px auto 0;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .footer-pill {
+      font-size: 11px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #ffece3;
+      color: #b65322;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 8px 18px rgba(148,81,43,0.25);
+    }
+
+    .footer-pill::before {
+      content: "✨";
+      font-size: 13px;
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 14px 8px 24px;
+      }
+      header {
+        padding: 14px 16px;
+      }
+      .tabs {
+        padding: 4px;
+        gap: 4px;
+      }
+      .tab {
+        font-size: 12px;
+        padding-inline: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="app-title">Production Management System</span>
+    <div class="subtitle">Powered by Google Sheets &amp; Apps Script</div>
+    <div class="pill">Live · Connected to sheet</div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-target="products">Products</div>
+    <div class="tab" data-target="machines">Machines</div>
+    <div class="tab" data-target="prodlog">Production Log</div>
+  </div>
+
+  <div class="container">
+    <div id="status" class="status-bar"></div>
+
+    <!-- PRODUCTS TAB -->
+    <div id="tab-products">
+      <div class="form-section">
+        <h3>Product Master</h3>
+        <div class="form-grid">
+          <div>
+            <label>ID (auto)</label>
+            <input type="text" id="prod-id" readonly>
+          </div>
+          <div>
+            <label>Product Code</label>
+            <input type="text" id="prod-code">
+          </div>
+          <div>
+            <label>Product Name</label>
+            <input type="text" id="prod-name">
+          </div>
+          <div>
+            <label>Unit</label>
+            <input type="text" id="prod-unit" placeholder="PCS / BOX etc.">
+          </div>
+          <div>
+            <label>Std Cycle Time (min/pc)</label>
+            <input type="number" id="prod-cycle" step="0.01">
+          </div>
+          <div>
+            <label>Std Scrap %</label>
+            <input type="number" id="prod-scrap" step="0.01">
+          </div>
+          <div>
+            <label>Selling Price</label>
+            <input type="number" id="prod-price" step="0.01">
+          </div>
+        </div>
+        <br>
+        <button class="primary" onclick="saveProduct()">Save Product</button>
+        <button class="secondary" onclick="resetProductForm()">Clear</button>
+      </div>
+
+      <div class="table-section">
+        <h4>Product List</h4>
+        <table id="prod-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>CODE</th>
+              <th>NAME</th>
+              <th>UNIT</th>
+              <th>CYCLE</th>
+              <th>SCRAP%</th>
+              <th>PRICE</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MACHINES TAB -->
+    <div id="tab-machines" class="hidden">
+      <div class="form-section">
+        <h3>Machine Master</h3>
+        <div class="form-grid">
+          <div>
+            <label>ID (auto)</label>
+            <input type="text" id="mach-id" readonly>
+          </div>
+          <div>
+            <label>Machine Code</label>
+            <input type="text" id="mach-code">
+          </div>
+          <div>
+            <label>Machine Name</label>
+            <input type="text" id="mach-name">
+          </div>
+          <div>
+            <label>Capacity (units/shift)</label>
+            <input type="number" id="mach-capacity">
+          </div>
+          <div>
+            <label>Location</label>
+            <input type="text" id="mach-location">
+          </div>
+        </div>
+        <br>
+        <button class="primary" onclick="saveMachine()">Save Machine</button>
+        <button class="secondary" onclick="resetMachineForm()">Clear</button>
+      </div>
+
+      <div class="table-section">
+        <h4>Machine List</h4>
+        <table id="mach-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>CODE</th>
+              <th>NAME</th>
+              <th>CAPACITY</th>
+              <th>LOCATION</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PRODUCTION LOG TAB -->
+    <div id="tab-prodlog" class="hidden">
+      <div class="form-section">
+        <h3>Production Log Entry</h3>
+        <div class="form-grid">
+          <div>
+            <label>ID (auto)</label>
+            <input type="text" id="log-id" readonly>
+          </div>
+          <div>
+            <label>Date</label>
+            <input type="date" id="log-date">
+          </div>
+          <div>
+            <label>Shift</label>
+            <select id="log-shift">
+              <option value="">Select</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+            </select>
+          </div>
+          <div>
+            <label>Product Code (scannable)</label>
+            <input type="text" id="log-prod-code">
+          </div>
+          <div>
+            <label>Product Name</label>
+            <input type="text" id="log-prod-name">
+          </div>
+          <div>
+            <label>Batch No.</label>
+            <input type="text" id="log-batch">
+          </div>
+          <div>
+            <label>Machine Code</label>
+            <input type="text" id="log-mach-code">
+          </div>
+          <div>
+            <label>Machine Name</label>
+            <input type="text" id="log-mach-name">
+          </div>
+          <div>
+            <label>Planned Qty</label>
+            <input type="number" id="log-planned">
+          </div>
+          <div>
+            <label>Actual Qty</label>
+            <input type="number" id="log-actual">
+          </div>
+          <div>
+            <label>Scrap Qty</label>
+            <input type="number" id="log-scrap">
+          </div>
+          <div>
+            <label>Status</label>
+            <select id="log-status">
+              <option value="">Select</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+        </div>
+        <br>
+        <button class="primary" onclick="saveProductionLog()">Save Log</button>
+        <button class="secondary" onclick="resetLogForm()">Clear</button>
+      </div>
+
+      <div class="table-section">
+        <h4>Production Logs</h4>
+        <table id="log-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Date</th>
+              <th>Shift</th>
+              <th>Prod Code</th>
+              <th>Prod Name</th>
+              <th>Batch</th>
+              <th>Machine</th>
+              <th>Planned</th>
+              <th>Actual</th>
+              <th>Scrap</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-badge">
+    <div class="footer-pill">Created by Satanand</div>
+  </div>
+
+  <script>
+    /********** TAB SWITCHING **********/
+    const tabs = document.querySelectorAll('.tab');
+    const tabProducts = document.getElementById('tab-products');
+    const tabMachines = document.getElementById('tab-machines');
+    const tabProdlog = document.getElementById('tab-prodlog');
+    const statusBar = document.getElementById('status');
+
+    tabs.forEach(t => {
+      t.addEventListener('click', () => {
+        tabs.forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        const target = t.dataset.target;
+        tabProducts.classList.add('hidden');
+        tabMachines.classList.add('hidden');
+        tabProdlog.classList.add('hidden');
+        if (target === 'products') tabProducts.classList.remove('hidden');
+        if (target === 'machines') tabMachines.classList.remove('hidden');
+        if (target === 'prodlog') tabProdlog.classList.remove('hidden');
+      });
+    });
+
+    function setStatus(msg) {
+      statusBar.textContent = msg || '';
+    }
+
+    /********** PRODUCTS **********/
+    function loadProducts() {
+      setStatus('Loading products...');
+      google.script.run.withSuccessHandler(data => {
+        renderProductTable(data);
+        setStatus('');
+      }).getProducts();
+    }
+
+    function renderProductTable(products) {
+      const tbody = document.querySelector('#prod-table tbody');
+      tbody.innerHTML = '';
+      products.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${p.ID || ''}</td>
+          <td>${p.ProductCode || ''}</td>
+          <td>${p.ProductName || ''}</td>
+          <td>${p.Unit || ''}</td>
+          <td>${p.StdCycleTime || ''}</td>
+          <td>${p.StdScrapPct || ''}</td>
+          <td>${p.SellingPrice || ''}</td>
+          <td class="actions">
+            <button onclick='editProduct(${JSON.stringify(p).replace(/"/g, "&quot;")})'>Edit</button>
+            <button onclick='confirmDeleteProduct(${p.ID})'>Del</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function editProduct(p) {
+      document.getElementById('prod-id').value = p.ID || '';
+      document.getElementById('prod-code').value = p.ProductCode || '';
+      document.getElementById('prod-name').value = p.ProductName || '';
+      document.getElementById('prod-unit').value = p.Unit || '';
+      document.getElementById('prod-cycle').value = p.StdCycleTime || '';
+      document.getElementById('prod-scrap').value = p.StdScrapPct || '';
+      document.getElementById('prod-price').value = p.SellingPrice || '';
+      setStatus('Editing product ID ' + p.ID);
+    }
+
+    function resetProductForm() {
+      document.getElementById('prod-id').value = '';
+      document.getElementById('prod-code').value = '';
+      document.getElementById('prod-name').value = '';
+      document.getElementById('prod-unit').value = '';
+      document.getElementById('prod-cycle').value = '';
+      document.getElementById('prod-scrap').value = '';
+      document.getElementById('prod-price').value = '';
+      setStatus('');
+    }
+
+    function saveProduct() {
+      const product = {
+        ID: document.getElementById('prod-id').value,
+        ProductCode: document.getElementById('prod-code').value.trim(),
+        ProductName: document.getElementById('prod-name').value.trim(),
+        Unit: document.getElementById('prod-unit').value.trim(),
+        StdCycleTime: document.getElementById('prod-cycle').value,
+        StdScrapPct: document.getElementById('prod-scrap').value,
+        SellingPrice: document.getElementById('prod-price').value
+      };
+      if (!product.ProductCode || !product.ProductName) {
+        alert('Product Code and Name are required');
+        return;
+      }
+      setStatus('Saving product...');
+      google.script.run.withSuccessHandler(res => {
+        resetProductForm();
+        loadProducts();
+        setStatus('Product saved (ID ' + res.ID + ')');
+      }).saveProduct(product);
+    }
+
+    function confirmDeleteProduct(id) {
+      if (!confirm('Delete product ID ' + id + '?')) return;
+      setStatus('Deleting product...');
+      google.script.run.withSuccessHandler(ok => {
+        loadProducts();
+        setStatus('Product deleted');
+      }).deleteProduct(id);
+    }
+
+    /********** MACHINES **********/
+    function loadMachines() {
+      setStatus('Loading machines...');
+      google.script.run.withSuccessHandler(data => {
+        renderMachineTable(data);
+        setStatus('');
+      }).getMachines();
+    }
+
+    function renderMachineTable(machines) {
+      const tbody = document.querySelector('#mach-table tbody');
+      tbody.innerHTML = '';
+      machines.forEach(m => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${m.ID || ''}</td>
+          <td>${m.MachineCode || ''}</td>
+          <td>${m.MachineName || ''}</td>
+          <td>${m.Capacity || ''}</td>
+          <td>${m.Location || ''}</td>
+          <td class="actions">
+            <button onclick='editMachine(${JSON.stringify(m).replace(/"/g, "&quot;")})'>Edit</button>
+            <button onclick='confirmDeleteMachine(${m.ID})'>Del</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function editMachine(m) {
+      document.getElementById('mach-id').value = m.ID || '';
+      document.getElementById('mach-code').value = m.MachineCode || '';
+      document.getElementById('mach-name').value = m.MachineName || '';
+      document.getElementById('mach-capacity').value = m.Capacity || '';
+      document.getElementById('mach-location').value = m.Location || '';
+      setStatus('Editing machine ID ' + m.ID);
+    }
+
+    function resetMachineForm() {
+      document.getElementById('mach-id').value = '';
+      document.getElementById('mach-code').value = '';
+      document.getElementById('mach-name').value = '';
+      document.getElementById('mach-capacity').value = '';
+      document.getElementById('mach-location').value = '';
+      setStatus('');
+    }
+
+    function saveMachine() {
+      const machine = {
+        ID: document.getElementById('mach-id').value,
+        MachineCode: document.getElementById('mach-code').value.trim(),
+        MachineName: document.getElementById('mach-name').value.trim(),
+        Capacity: document.getElementById('mach-capacity').value,
+        Location: document.getElementById('mach-location').value.trim()
+      };
+      if (!machine.MachineCode || !machine.MachineName) {
+        alert('Machine Code and Name are required');
+        return;
+      }
+      setStatus('Saving machine...');
+      google.script.run.withSuccessHandler(res => {
+        resetMachineForm();
+        loadMachines();
+        setStatus('Machine saved (ID ' + res.ID + ')');
+      }).saveMachine(machine);
+    }
+
+    function confirmDeleteMachine(id) {
+      if (!confirm('Delete machine ID ' + id + '?')) return;
+      setStatus('Deleting machine...');
+      google.script.run.withSuccessHandler(ok => {
+        loadMachines();
+        setStatus('Machine deleted');
+      }).deleteMachine(id);
+    }
+
+    /********** PRODUCTION LOG **********/
+    function loadProductionLogs() {
+      setStatus('Loading production logs...');
+      google.script.run.withSuccessHandler(data => {
+        renderLogTable(data);
+        setStatus('');
+      }).getProductionLogs();
+    }
+
+    function renderLogTable(logs) {
+      const tbody = document.querySelector('#log-table tbody');
+      tbody.innerHTML = '';
+      logs.forEach(l => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${l.ID || ''}</td>
+          <td>${formatDate(l.Date)}</td>
+          <td>${l.Shift || ''}</td>
+          <td>${l.ProductCode || ''}</td>
+          <td>${l.ProductName || ''}</td>
+          <td>${l.BatchNo || ''}</td>
+          <td>${l.MachineCode || ''}</td>
+          <td>${l.PlannedQty || ''}</td>
+          <td>${l.ActualQty || ''}</td>
+          <td>${l.ScrapQty || ''}</td>
+          <td>${l.Status || ''}</td>
+          <td class="actions">
+            <button onclick='editLog(${JSON.stringify(l).replace(/"/g, "&quot;")})'>Edit</button>
+            <button onclick='confirmDeleteLog(${l.ID})'>Del</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function formatDate(v) {
+      if (!v) return '';
+      try {
+        const d = new Date(v);
+        if (isNaN(d)) return v;
+        return d.toISOString().slice(0,10);
+      } catch(e) {
+        return v;
+      }
+    }
+
+    function editLog(l) {
+      document.getElementById('log-id').value = l.ID || '';
+      document.getElementById('log-date').value = formatDate(l.Date);
+      document.getElementById('log-shift').value = l.Shift || '';
+      document.getElementById('log-prod-code').value = l.ProductCode || '';
+      document.getElementById('log-prod-name').value = l.ProductName || '';
+      document.getElementById('log-batch').value = l.BatchNo || '';
+      document.getElementById('log-mach-code').value = l.MachineCode || '';
+      document.getElementById('log-mach-name').value = l.MachineName || '';
+      document.getElementById('log-planned').value = l.PlannedQty || '';
+      document.getElementById('log-actual').value = l.ActualQty || '';
+      document.getElementById('log-scrap').value = l.ScrapQty || '';
+      document.getElementById('log-status').value = l.Status || '';
+      setStatus('Editing log ID ' + l.ID);
+    }
+
+    function resetLogForm() {
+      document.getElementById('log-id').value = '';
+      document.getElementById('log-date').value = '';
+      document.getElementById('log-shift').value = '';
+      document.getElementById('log-prod-code').value = '';
+      document.getElementById('log-prod-name').value = '';
+      document.getElementById('log-batch').value = '';
+      document.getElementById('log-mach-code').value = '';
+      document.getElementById('log-mach-name').value = '';
+      document.getElementById('log-planned').value = '';
+      document.getElementById('log-actual').value = '';
+      document.getElementById('log-scrap').value = '';
+      document.getElementById('log-status').value = '';
+      setStatus('');
+    }
+
+    function saveProductionLog() {
+      const log = {
+        ID: document.getElementById('log-id').value,
+        Date: document.getElementById('log-date').value,
+        Shift: document.getElementById('log-shift').value,
+        ProductCode: document.getElementById('log-prod-code').value.trim(),
+        ProductName: document.getElementById('log-prod-name').value.trim(),
+        BatchNo: document.getElementById('log-batch').value.trim(),
+        MachineCode: document.getElementById('log-mach-code').value.trim(),
+        MachineName: document.getElementById('log-mach-name').value.trim(),
+        PlannedQty: document.getElementById('log-planned').value,
+        ActualQty: document.getElementById('log-actual').value,
+        ScrapQty: document.getElementById('log-scrap').value,
+        Status: document.getElementById('log-status').value
+      };
+      if (!log.Date || !log.ProductCode || !log.MachineCode) {
+        alert('Date, Product Code and Machine Code are required');
+        return;
+      }
+      setStatus('Saving production log...');
+      google.script.run.withSuccessHandler(res => {
+        resetLogForm();
+        loadProductionLogs();
+        setStatus('Production log saved (ID ' + res.ID + ')');
+      }).saveProductionLog(log);
+    }
+
+    function confirmDeleteLog(id) {
+      if (!confirm('Delete log ID ' + id + '?')) return;
+      setStatus('Deleting log...');
+      google.script.run.withSuccessHandler(ok => {
+        loadProductionLogs();
+        setStatus('Log deleted');
+      }).deleteProductionLog(id);
+    }
+
+    /********** INIT **********/
+    window.onload = function() {
+      loadProducts();
+      loadMachines();
+      loadProductionLogs();
+    };
+  </script>
+</body>
+</html>
