@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Entry Form</title>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+  
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      background-color: #2d2d2d;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      margin-bottom: 30px;
+    }
+    
+    .form-label {
+      color: #f0f0f0;
+      font-weight: 500;
+    }
+    
+    .form-control, .form-select {
+      background-color: #3a3a3a;
+      border-color: #4a4a4a;
+      color: #e0e0e0;
+    }
+    
+    .form-control:focus, .form-select:focus {
+      background-color: #404040;
+      border-color: #0d6efd;
+      color: #e0e0e0;
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .table {
+      color: #e0e0e0;
+    }
+    
+    .table thead th {
+      background-color: #3a3a3a;
+      border-color: #4a4a4a;
+      color: #f0f0f0;
+    }
+    
+    .table tbody td {
+      background-color: #2d2d2d;
+      border-color: #4a4a4a;
+    }
+    
+    .table-striped tbody tr:nth-of-type(odd) {
+      background-color: #333333;
+    }
+    
+    .btn-add-row {
+      background-color: #198754;
+      border-color: #198754;
+    }
+    
+    .btn-add-row:hover {
+      background-color: #157347;
+      border-color: #146c43;
+    }
+    
+    .btn-remove-row {
+      background-color: #dc3545;
+      border-color: #dc3545;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+    }
+    
+    .btn-remove-row:hover {
+      background-color: #bb2d3b;
+      border-color: #b02a37;
+    }
+    
+    h2, h3 {
+      color: #f0f0f0;
+      margin-bottom: 20px;
+    }
+    
+    .modal-content {
+      background-color: #2d2d2d;
+      color: #e0e0e0;
+    }
+    
+    .modal-header {
+      border-bottom-color: #4a4a4a;
+    }
+    
+    .modal-footer {
+      border-top-color: #4a4a4a;
+    }
+    
+    .btn-close {
+      filter: invert(1);
+    }
+    
+    input[type="date"] {
+      color-scheme: dark;
+    }
+    
+    .spinner-border-sm {
+      width: 1rem;
+      height: 1rem;
+      border-width: 0.15em;
+    }
+    
+    #historySection {
+      display: none;
+    }
+    
+    .badge {
+      font-size: 0.85rem;
+    }
+    
+    .history-table-wrapper {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    
+    .loading-spinner {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .no-data-message {
+      text-align: center;
+      padding: 20px;
+      color: #999;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <!-- Expense Entry Form -->
+  <div class="container">
+    <h2><i class="bi bi-receipt"></i> Expense Entry</h2>
+    
+    <form id="expenseForm">
+      <!-- Employee Selection -->
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <label for="employeeSelect" class="form-label">Member <span class="text-danger">*</span></label>
+          <select class="form-select" id="employeeSelect" required>
+            <option value="">Select Member...</option>
+          </select>
+        </div>
+      </div>
+      
+      <hr class="my-4">
+      
+      <!-- Transactions Table -->
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th style="width: 20%;">Transaction Date <span class="text-danger">*</span></th>
+              <th style="width: 25%;">Category <span class="text-danger">*</span></th>
+              <th style="width: 20%;">Amount (USD) <span class="text-danger">*</span></th>
+              <th style="width: 30%;">Description</th>
+              <th style="width: 5%;"></th>
+            </tr>
+          </thead>
+          <tbody id="transactionRows">
+            <!-- Rows will be added dynamically -->
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="mb-4">
+        <button type="button" class="btn btn-add-row" id="addRowBtn">
+          <i class="bi bi-plus-circle"></i> Add Another Transaction
+        </button>
+      </div>
+      
+      <hr class="my-4">
+      
+      <!-- Submit Button -->
+      <div class="text-end">
+        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+          <i class="bi bi-check-circle"></i> Submit Expenses
+        </button>
+      </div>
+    </form>
+  </div>
+  
+  <!-- Transaction History Section -->
+  <div class="container" id="historySection">
+    <h3><i class="bi bi-clock-history"></i> Transaction History for <span id="historyEmployeeName"></span></h3>
+    
+    <div class="loading-spinner" id="loadingSpinner">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2">Loading transactions...</p>
+    </div>
+    
+    <div id="historyContent">
+      <div class="history-table-wrapper">
+        <table class="table table-striped table-hover" id="historyTable">
+          <thead>
+            <tr>
+              <th>Date Entered</th>
+              <th>Transaction Date</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody">
+            <!-- Transaction history will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-3">
+        <strong>Total Transactions: <span class="badge bg-primary" id="totalCount">0</span></strong>
+        <strong class="ms-3">Total Amount: <span class="badge bg-success" id="totalAmount">₹0.00</span></strong>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Success Modal -->
+  <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="successModalLabel">
+            <i class="bi bi-check-circle-fill text-success"></i> Success
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="modalMessage">
+          Expenses submitted successfully!
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Error Modal -->
+  <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="errorModalLabel">
+            <i class="bi bi-exclamation-triangle-fill text-danger"></i> Error
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="errorMessage">
+          An error occurred.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    let dropdownData = {};
+    let rowCount = 0;
+    
+    // Initialize form on load
+    window.addEventListener('DOMContentLoaded', function() {
+      loadDropdownData();
+    });
+    
+    // Load dropdown data from Google Sheet
+    function loadDropdownData() {
+      google.script.run
+        .withSuccessHandler(function(data) {
+          dropdownData = data;
+          populateEmployeeDropdown();
+          initializeRows(5); // Start with 5 rows
+        })
+        .withFailureHandler(function(error) {
+          showError('Failed to load dropdown data: ' + error.message);
+        })
+        .getDropdownData();
+    }
+    
+    // Populate employee dropdown
+    function populateEmployeeDropdown() {
+      const select = document.getElementById('employeeSelect');
+      dropdownData.employees.forEach(function(employee) {
+        const option = document.createElement('option');
+        option.value = employee;
+        option.textContent = employee;
+        select.appendChild(option);
+      });
+    }
+    
+    // Initialize transaction rows
+    function initializeRows(count) {
+      for (let i = 0; i < count; i++) {
+        addTransactionRow();
+      }
+    }
+    
+    // Add a new transaction row
+    function addTransactionRow() {
+      rowCount++;
+      const tbody = document.getElementById('transactionRows');
+      const row = document.createElement('tr');
+      row.id = 'row-' + rowCount;
+      
+      // Build category options
+      let categoryOptions = '<option value="">Select Category...</option>';
+      dropdownData.categories.forEach(function(category) {
+        categoryOptions += '<option value="' + category + '">' + category + '</option>';
+      });
+      
+      row.innerHTML = `
+        <td>
+          <input type="date" class="form-control transaction-date" required>
+        </td>
+        <td>
+          <select class="form-select transaction-category" required>
+            ${categoryOptions}
+          </select>
+        </td>
+        <td>
+          <input type="number" class="form-control transaction-amount" step="0.01" min="0" placeholder="0.00" required>
+        </td>
+        <td>
+          <input type="text" class="form-control transaction-description" placeholder="Optional">
+        </td>
+        <td class="text-center">
+          <button type="button" class="btn btn-remove-row btn-sm" onclick="removeRow(${rowCount})">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      `;
+      
+      tbody.appendChild(row);
+    }
+    
+    // Remove a transaction row
+    function removeRow(id) {
+      const row = document.getElementById('row-' + id);
+      if (row) {
+        const tbody = document.getElementById('transactionRows');
+        if (tbody.children.length > 1) {
+          row.remove();
+        } else {
+          showError('At least one transaction row must remain.');
+        }
+      }
+    }
+    
+    // Employee selection change handler - Load transaction history
+    document.getElementById('employeeSelect').addEventListener('change', function() {
+      const selectedEmployee = this.value;
+      
+      if (selectedEmployee) {
+        loadEmployeeHistory(selectedEmployee);
+      } else {
+        hideHistorySection();
+      }
+    });
+    
+    // Load employee transaction history
+    function loadEmployeeHistory(employeeName) {
+      const historySection = document.getElementById('historySection');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      const historyContent = document.getElementById('historyContent');
+      const historyEmployeeName = document.getElementById('historyEmployeeName');
+      
+      // Show section and loading spinner
+      historySection.style.display = 'block';
+      loadingSpinner.style.display = 'block';
+      historyContent.style.display = 'none';
+      historyEmployeeName.textContent = employeeName;
+      
+      // Fetch data from server
+      google.script.run
+        .withSuccessHandler(function(transactions) {
+          displayEmployeeHistory(transactions);
+          loadingSpinner.style.display = 'none';
+          historyContent.style.display = 'block';
+        })
+        .withFailureHandler(function(error) {
+          showError('Failed to load transaction history: ' + error.message);
+          loadingSpinner.style.display = 'none';
+          historyContent.style.display = 'block';
+        })
+        .getEmployeeTransactions(employeeName);
+    }
+    
+    // Display employee transaction history in table
+    function displayEmployeeHistory(transactions) {
+      const tbody = document.getElementById('historyTableBody');
+      tbody.innerHTML = '';
+      
+      if (transactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="no-data-message">No transactions found for this employee.</td></tr>';
+        document.getElementById('totalCount').textContent = '0';
+        document.getElementById('totalAmount').textContent = '₹0.00';
+        return;
+      }
+      
+      let totalAmount = 0;
+      
+      // Sort transactions by transaction date (newest first)
+      transactions.sort(function(a, b) {
+        return new Date(b.transactionDate) - new Date(a.transactionDate);
+      });
+      
+      transactions.forEach(function(transaction) {
+        const row = document.createElement('tr');
+        
+        const dateEntered = new Date(transaction.dateEntered);
+        const transactionDate = new Date(transaction.transactionDate);
+        const amount = parseFloat(transaction.amount) || 0;
+        totalAmount += amount;
+        
+        row.innerHTML = `
+          <td>${dateEntered.toLocaleDateString('en-US')}</td>
+          <td>${transactionDate.toLocaleDateString('en-US')}</td>
+          <td>${transaction.category}</td>
+          <td>${amount.toFixed(2)}</td>
+          <td>${transaction.description || '-'}</td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+      
+      document.getElementById('totalCount').textContent = transactions.length;
+      document.getElementById('totalAmount').textContent = '₹' + totalAmount.toFixed(2);
+    }
+    
+    // Hide history section
+    function hideHistorySection() {
+      document.getElementById('historySection').style.display = 'none';
+    }
+    
+    // Add row button handler
+    document.getElementById('addRowBtn').addEventListener('click', function() {
+      addTransactionRow();
+    });
+    
+    // Form submission handler
+    document.getElementById('expenseForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const employee = document.getElementById('employeeSelect').value;
+      if (!employee) {
+        showError('Please select an employee.');
+        return;
+      }
+      
+      const rows = document.querySelectorAll('#transactionRows tr');
+      const transactions = [];
+      
+      let hasError = false;
+      rows.forEach(function(row) {
+        const date = row.querySelector('.transaction-date').value;
+        const category = row.querySelector('.transaction-category').value;
+        const amount = row.querySelector('.transaction-amount').value;
+        const description = row.querySelector('.transaction-description').value;
+        
+        if (date && category && amount) {
+          transactions.push({
+            transactionDate: date,
+            category: category,
+            amount: amount,
+            description: description
+          });
+        } else if (date || category || amount) {
+          hasError = true;
+        }
+      });
+      
+      if (hasError) {
+        showError('Please complete all required fields in each transaction row or remove incomplete rows.');
+        return;
+      }
+      
+      if (transactions.length === 0) {
+        showError('Please add at least one complete transaction.');
+        return;
+      }
+      
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.classList.add('disabled');
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting...';
+      
+      const formData = {
+        employee: employee,
+        transactions: transactions
+      };
+      
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response.success) {
+            showSuccess(response.message);
+            resetForm();
+            loadEmployeeHistory(employee);
+          } else {
+            showError(response.message);
+          }
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('disabled');
+          submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Submit Expenses';
+        })
+        .withFailureHandler(function(error) {
+          showError('Submission failed: ' + error.message);
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('disabled');
+          submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Submit Expenses';
+        })
+        .submitExpenses(formData);
+    });
+    
+    // Reset form after successful submission
+    function resetForm() {
+      const employee = document.getElementById('employeeSelect').value;
+      document.getElementById('expenseForm').reset();
+      document.getElementById('employeeSelect').value = employee;
+      document.getElementById('transactionRows').innerHTML = '';
+      rowCount = 0;
+      initializeRows(5);
+    }
+    
+    // Show success modal
+    function showSuccess(message) {
+      document.getElementById('modalMessage').textContent = message;
+      const modal = new bootstrap.Modal(document.getElementById('successModal'));
+      modal.show();
+    }
+    
+    // Show error modal
+    function showError(message) {
+      document.getElementById('errorMessage').textContent = message;
+      const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+      modal.show();
+    }
+  </script>
+</body>
+</html>
