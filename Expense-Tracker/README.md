@@ -1,5 +1,5 @@
 
-# Web-based Family Expense Tracker (Google Sheets + Apps Script)
+# Web-based Expense Tracker (Google Sheets + Apps Script)
 
 A dark-themed **family expense tracker** built with **Google Apps Script + HTML/Bootstrap**, using **Google Sheets as the database**.
 
