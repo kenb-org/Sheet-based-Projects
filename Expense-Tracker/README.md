@@ -1,4 +1,4 @@
-````md
+
 # Web-based Family Expense Tracker (Google Sheets + Apps Script)
 
 A dark-themed **family expense tracker** built with **Google Apps Script + HTML/Bootstrap**, using **Google Sheets as the database**.
@@ -140,7 +140,7 @@ function doGet() {
     .setTitle('Expense Entry Form')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
-```
+
 
 #### Load Dropdown Data
 
