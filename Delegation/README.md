@@ -6,7 +6,9 @@
 ---
 ## Glance
 ### Link [Click Me](https://script.google.com/macros/s/AKfycbxLkGVG9nZm4RefWD91Va-r_3R-u70-Zqc3wZHrFl9nD7vEL7N5VGse6AnO_PDQYqLy/exec)
+### Watch The Video [Click Me](http://img.youtube.com)](https://youtu.be/TcY4Spx2HtE)
 
+https://youtu.be/TcY4Spx2HtE
 ## 📊 Quick Stats
 
 | Metric | Value |
