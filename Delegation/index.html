@@ -4,276 +4,430 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Delegation Handler System</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Bricolage+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #0d0d14;
-    --surface: #13131e;
-    --panel: #1a1a2e;
-    --card: #1f1f35;
-    --border: #2e2e4a;
-    --accent: #6c63ff;
-    --accent2: #ff6584;
-    --accent3: #43e97b;
-    --gold: #f7c948;
-    --text: #e8e8f0;
-    --muted: #8888a8;
-    --pending: #f7c948;
-    --inprogress: #4fc3f7;
-    --completed: #43e97b;
-    --overdue: #ff6584;
-    --critical: #ff4757;
-    --high: #ff6b35;
-    --medium: #4fc3f7;
-    --low: #43e97b;
+    --bg-start: #dbeafe;
+    --bg-mid: #ede9fe;
+    --bg-end: #fce7f3;
+    --bg-accent: #e0f2fe;
+    --glass: rgba(255,255,255,0.55);
+    --glass-strong: rgba(255,255,255,0.75);
+    --glass-border: rgba(255,255,255,0.8);
+    --glass-shadow: 0 8px 32px rgba(99,102,241,0.10), 0 1.5px 8px rgba(99,102,241,0.07);
+    --glass-shadow-lg: 0 20px 60px rgba(99,102,241,0.15), 0 4px 20px rgba(99,102,241,0.10);
+    --ink: #1e1b4b;
+    --ink-2: #3730a3;
+    --muted: #6b7280;
+    --muted-2: #9ca3af;
+    --accent: #6366f1;
+    --accent2: #ec4899;
+    --accent3: #10b981;
+    --accent4: #f59e0b;
+    --accent5: #06b6d4;
+    --pending: #f59e0b;
+    --inprogress: #06b6d4;
+    --completed: #10b981;
+    --overdue: #ef4444;
+    --critical: #ef4444;
+    --high: #f97316;
+    --medium: #06b6d4;
+    --low: #10b981;
+    --sidebar-w: 248px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--ink);
-    color: var(--text);
+    font-family: 'Bricolage Grotesque', sans-serif;
+    background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-mid) 40%, var(--bg-end) 80%, var(--bg-accent) 100%);
+    background-attachment: fixed;
+    color: var(--ink);
     min-height: 100vh;
     overflow-x: hidden;
+  }
+
+  /* Animated mesh blobs */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 0;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  body::before {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, #a5b4fc 0%, #818cf8 50%, transparent 80%);
+    top: -200px; left: -150px;
+  }
+  body::after {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, #f9a8d4 0%, #c084fc 50%, transparent 80%);
+    bottom: -150px; right: -100px;
+    animation-delay: -9s;
+  }
+
+  .blob-mid {
+    position: fixed; width: 400px; height: 400px;
+    background: radial-gradient(circle, #67e8f9 0%, #a5f3fc 50%, transparent 80%);
+    border-radius: 50%; filter: blur(70px); opacity: 0.4; pointer-events: none; z-index: 0;
+    top: 40%; left: 55%;
+    animation: drift 22s ease-in-out infinite alternate-reverse;
+  }
+
+  @keyframes drift {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(40px, -30px) scale(1.08); }
+    100% { transform: translate(-30px, 50px) scale(0.95); }
+  }
+
+  /* ── GLASSMORPHISM BASE ── */
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(20px) saturate(1.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-strong {
+    background: var(--glass-strong);
+    backdrop-filter: blur(28px) saturate(2);
+    -webkit-backdrop-filter: blur(28px) saturate(2);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow-lg);
   }
 
   /* ── SIDEBAR ── */
   .sidebar {
     position: fixed; left: 0; top: 0;
-    width: 240px; height: 100vh;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
+    width: var(--sidebar-w); height: 100vh;
+    background: rgba(255,255,255,0.60);
+    backdrop-filter: blur(30px) saturate(2);
+    -webkit-backdrop-filter: blur(30px) saturate(2);
+    border-right: 1px solid rgba(255,255,255,0.85);
+    box-shadow: 4px 0 32px rgba(99,102,241,0.08);
     display: flex; flex-direction: column;
     z-index: 100;
-    transition: transform 0.3s ease;
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
   }
 
   .logo-area {
-    padding: 28px 24px 20px;
-    border-bottom: 1px solid var(--border);
+    padding: 28px 22px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.7);
   }
 
   .logo-badge {
-    display: inline-flex; align-items: center; gap: 10px;
-    font-family: 'Syne', sans-serif;
-    font-weight: 800; font-size: 15px; color: var(--text);
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: 'Clash Display', sans-serif;
+    font-weight: 700; font-size: 16px; color: var(--ink);
   }
 
   .logo-icon {
-    width: 36px; height: 36px;
+    width: 40px; height: 40px;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
+    font-size: 20px;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.35);
   }
 
-  .logo-sub { font-family: 'DM Sans', sans-serif; font-size: 10px; color: var(--muted); font-weight: 400; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+  .logo-sub { font-family: 'Bricolage Grotesque', sans-serif; font-size: 10px; color: var(--muted); font-weight: 400; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
 
   nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
 
-  .nav-section { margin-bottom: 24px; }
-  .nav-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); padding: 0 12px; margin-bottom: 8px; }
+  .nav-section { margin-bottom: 22px; }
+  .nav-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted-2); padding: 0 12px; margin-bottom: 8px; font-weight: 600; }
 
   .nav-item {
     display: flex; align-items: center; gap: 12px;
-    padding: 10px 12px; border-radius: 10px;
-    cursor: pointer; transition: all 0.2s;
+    padding: 10px 12px; border-radius: 12px;
+    cursor: pointer; transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
     font-size: 14px; font-weight: 500;
     color: var(--muted); margin-bottom: 2px;
     position: relative;
   }
 
-  .nav-item:hover { background: var(--panel); color: var(--text); }
-  .nav-item.active { background: linear-gradient(135deg, rgba(108,99,255,0.2), rgba(255,101,132,0.1)); color: var(--text); }
-  .nav-item.active::before { content: ''; position: absolute; left: 0; top: 20%; height: 60%; width: 3px; background: var(--accent); border-radius: 0 3px 3px 0; }
-  .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+  .nav-item:hover {
+    background: rgba(99,102,241,0.08);
+    color: var(--ink);
+    transform: translateX(3px);
+  }
+
+  .nav-item.active {
+    background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(236,72,153,0.08));
+    color: var(--accent);
+    font-weight: 600;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 2px 8px rgba(99,102,241,0.12);
+  }
+
+  .nav-item.active::before {
+    content: ''; position: absolute; left: 0; top: 20%; height: 60%; width: 3px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+    border-radius: 0 3px 3px 0;
+  }
+
+  .nav-icon { font-size: 17px; width: 22px; text-align: center; }
 
   .badge-count {
-    margin-left: auto; background: var(--accent2);
+    margin-left: auto; background: linear-gradient(135deg, var(--accent2), #f43f5e);
     color: white; font-size: 10px; font-weight: 700;
     padding: 2px 7px; border-radius: 20px; min-width: 20px; text-align: center;
+    box-shadow: 0 2px 8px rgba(236,72,153,0.35);
   }
 
   .sidebar-footer {
-    padding: 16px; border-top: 1px solid var(--border);
-    font-size: 12px; color: var(--muted);
+    padding: 16px; border-top: 1px solid rgba(255,255,255,0.7);
   }
 
   .user-chip {
     display: flex; align-items: center; gap: 10px;
-    background: var(--panel); border-radius: 10px; padding: 10px 12px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(255,255,255,0.85);
+    border-radius: 12px; padding: 10px 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 12px rgba(99,102,241,0.08);
   }
 
-  .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: white;
+    box-shadow: 0 3px 10px rgba(99,102,241,0.3);
+  }
 
-  /* ── MAIN CONTENT ── */
-  .main { margin-left: 240px; min-height: 100vh; }
+  /* ── MAIN ── */
+  .main { margin-left: var(--sidebar-w); min-height: 100vh; position: relative; z-index: 1; }
 
   .topbar {
     position: sticky; top: 0; z-index: 90;
-    background: rgba(13,13,20,0.85); backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 32px;
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(24px) saturate(2);
+    -webkit-backdrop-filter: blur(24px) saturate(2);
+    border-bottom: 1px solid rgba(255,255,255,0.8);
+    box-shadow: 0 2px 20px rgba(99,102,241,0.07);
+    padding: 14px 30px;
     display: flex; align-items: center; justify-content: space-between;
   }
 
-  .page-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
-  .page-title span { color: var(--accent); }
+  .page-title { font-family: 'Clash Display', sans-serif; font-size: 20px; font-weight: 700; color: var(--ink); }
+  .page-title span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
   .topbar-actions { display: flex; gap: 10px; align-items: center; }
 
   .btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 9px 18px; border-radius: 10px; border: none;
-    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
-    cursor: pointer; transition: all 0.2s; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 11px; border: none;
+    font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.22s cubic-bezier(0.4,0,0.2,1); text-decoration: none;
   }
 
-  .btn-primary { background: var(--accent); color: white; }
-  .btn-primary:hover { background: #5a52e0; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(108,99,255,0.4); }
-  .btn-ghost { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
-  .btn-ghost:hover { background: var(--card); }
-  .btn-danger { background: rgba(255,101,132,0.15); color: var(--accent2); border: 1px solid rgba(255,101,132,0.3); }
-  .btn-danger:hover { background: rgba(255,101,132,0.25); }
-  .btn-success { background: rgba(67,233,123,0.15); color: var(--accent3); border: 1px solid rgba(67,233,123,0.3); }
-  .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 7px; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #818cf8);
+    color: white;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.35);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99,102,241,0.45); filter: brightness(1.05); }
 
-  .content { padding: 28px 32px; }
+  .btn-ghost {
+    background: rgba(255,255,255,0.65);
+    color: var(--ink);
+    border: 1px solid rgba(255,255,255,0.9);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(99,102,241,0.07);
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.85); transform: translateY(-1px); }
+
+  .btn-danger {
+    background: rgba(239,68,68,0.10);
+    color: var(--overdue);
+    border: 1px solid rgba(239,68,68,0.25);
+  }
+  .btn-danger:hover { background: rgba(239,68,68,0.18); }
+
+  .btn-success {
+    background: rgba(16,185,129,0.10);
+    color: var(--completed);
+    border: 1px solid rgba(16,185,129,0.25);
+  }
+
+  .btn-sm { padding: 6px 13px; font-size: 12px; border-radius: 9px; }
+
+  .content { padding: 28px 30px; }
 
   /* ── VIEWS ── */
   .view { display: none; }
-  .view.active { display: block; }
+  .view.active { display: block; animation: fadeSlideIn 0.35s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes fadeSlideIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
 
-  /* ── DASHBOARD ── */
+  /* ── STAT CARDS ── */
   .stats-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-    margin-bottom: 28px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+    margin-bottom: 24px;
   }
 
   .stat-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 16px; padding: 22px;
+    background: rgba(255,255,255,0.58);
+    backdrop-filter: blur(20px) saturate(1.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+    border: 1px solid rgba(255,255,255,0.85);
+    border-radius: 18px; padding: 22px;
     position: relative; overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.9);
   }
 
-  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+  .stat-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(99,102,241,0.16), inset 0 1px 0 rgba(255,255,255,0.9); }
 
   .stat-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    border-radius: 18px 18px 0 0;
   }
 
   .stat-card.s-total::before { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
-  .stat-card.s-pending::before { background: var(--pending); }
-  .stat-card.s-progress::before { background: var(--inprogress); }
-  .stat-card.s-completed::before { background: var(--completed); }
-  .stat-card.s-overdue::before { background: var(--overdue); }
-  .stat-card.s-critical::before { background: var(--critical); }
-  .stat-card.s-rate::before { background: linear-gradient(90deg, var(--accent3), var(--accent)); }
+  .stat-card.s-pending::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+  .stat-card.s-progress::before { background: linear-gradient(90deg, #06b6d4, #38bdf8); }
+  .stat-card.s-completed::before { background: linear-gradient(90deg, #10b981, #34d399); }
+  .stat-card.s-overdue::before { background: linear-gradient(90deg, #ef4444, #f87171); }
+  .stat-card.s-critical::before { background: linear-gradient(90deg, #f97316, #fb923c); }
+  .stat-card.s-rate::before { background: linear-gradient(90deg, #10b981, #6366f1); }
 
-  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
-  .stat-value { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; line-height: 1; }
-  .stat-icon { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 36px; opacity: 0.15; }
-
-  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
-
-  .chart-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 16px; padding: 22px;
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; font-weight: 600; }
+  .stat-value { font-family: 'Clash Display', sans-serif; font-size: 38px; font-weight: 700; line-height: 1; color: var(--ink); }
+  .stat-icon {
+    position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+    font-size: 38px; opacity: 0.12;
   }
 
-  .chart-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 18px; color: var(--text); }
+  /* ── CHARTS ── */
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
 
-  .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+  .chart-card {
+    background: rgba(255,255,255,0.58);
+    backdrop-filter: blur(20px) saturate(1.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+    border: 1px solid rgba(255,255,255,0.85);
+    border-radius: 18px; padding: 22px;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.07), inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+
+  .chart-title { font-family: 'Clash Display', sans-serif; font-size: 14px; font-weight: 600; margin-bottom: 18px; color: var(--ink); }
+
+  .bar-chart { display: flex; flex-direction: column; gap: 12px; }
   .bar-row { display: flex; align-items: center; gap: 10px; }
-  .bar-label { width: 80px; font-size: 12px; color: var(--muted); text-align: right; }
-  .bar-track { flex: 1; height: 8px; background: var(--panel); border-radius: 4px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
-  .bar-val { width: 30px; font-size: 12px; color: var(--text); font-weight: 600; }
+  .bar-label { width: 70px; font-size: 12px; color: var(--muted); text-align: right; font-weight: 500; }
+  .bar-track { flex: 1; height: 9px; background: rgba(99,102,241,0.08); border-radius: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+  .bar-val { width: 28px; font-size: 12px; color: var(--ink); font-weight: 700; }
 
-  .donut-wrap { display: flex; align-items: center; gap: 20px; }
-  .donut-svg { flex-shrink: 0; }
-  .donut-legend { display: flex; flex-direction: column; gap: 8px; }
+  .donut-wrap { display: flex; align-items: center; gap: 24px; }
+  .donut-legend { display: flex; flex-direction: column; gap: 9px; }
   .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
-  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
   /* ── TABLE ── */
-  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .table-wrap {
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(22px) saturate(1.8);
+    -webkit-backdrop-filter: blur(22px) saturate(1.8);
+    border: 1px solid rgba(255,255,255,0.85);
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 8px 32px rgba(99,102,241,0.09), inset 0 1px 0 rgba(255,255,255,0.9);
+  }
 
   .table-header {
     padding: 18px 24px;
     display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(255,255,255,0.7);
+    background: rgba(255,255,255,0.4);
   }
 
-  .table-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+  .table-title { font-family: 'Clash Display', sans-serif; font-size: 16px; font-weight: 600; color: var(--ink); }
 
   .filter-row {
     display: flex; gap: 10px; padding: 14px 24px;
-    border-bottom: 1px solid var(--border);
-    flex-wrap: wrap;
+    border-bottom: 1px solid rgba(255,255,255,0.6);
+    flex-wrap: wrap; background: rgba(255,255,255,0.25);
   }
 
   .search-box {
     display: flex; align-items: center; gap: 8px;
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 9px; padding: 8px 14px; flex: 1; min-width: 200px;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(255,255,255,0.9);
+    border-radius: 11px; padding: 9px 14px; flex: 1; min-width: 200px;
+    box-shadow: 0 2px 10px rgba(99,102,241,0.06);
   }
 
   .search-box input {
-    background: none; border: none; color: var(--text);
-    font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; flex: 1;
+    background: none; border: none; color: var(--ink);
+    font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; outline: none; flex: 1;
   }
 
+  .search-box input::placeholder { color: var(--muted-2); }
+
   .filter-select {
-    background: var(--panel); border: 1px solid var(--border);
-    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
-    padding: 8px 12px; border-radius: 9px; outline: none; cursor: pointer;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(255,255,255,0.9);
+    color: var(--ink); font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px;
+    padding: 9px 14px; border-radius: 11px; outline: none; cursor: pointer;
+    box-shadow: 0 2px 10px rgba(99,102,241,0.06);
   }
 
   .data-table { width: 100%; border-collapse: collapse; }
+
   .data-table th {
     padding: 12px 16px; text-align: left;
     font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
-    color: var(--muted); border-bottom: 1px solid var(--border);
-    white-space: nowrap;
+    color: var(--muted); border-bottom: 1px solid rgba(99,102,241,0.1);
+    white-space: nowrap; font-weight: 700;
+    background: rgba(255,255,255,0.3);
   }
 
-  .data-table td { padding: 14px 16px; border-bottom: 1px solid rgba(46,46,74,0.5); font-size: 13px; vertical-align: middle; }
-  .data-table tr:last-child td { border-bottom: none; }
-  .data-table tr:hover td { background: rgba(108,99,255,0.05); }
+  .data-table td {
+    padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.55);
+    font-size: 13px; vertical-align: middle;
+    color: var(--ink);
+  }
 
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(99,102,241,0.04); }
+
+  /* ── TAGS ── */
   .priority-tag {
     display: inline-flex; align-items: center; gap: 5px;
-    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 700;
   }
 
-  .p-Critical { background: rgba(255,71,87,0.15); color: var(--critical); }
-  .p-High { background: rgba(255,107,53,0.15); color: var(--high); }
-  .p-Medium { background: rgba(79,195,247,0.15); color: var(--medium); }
-  .p-Low { background: rgba(67,233,123,0.15); color: var(--low); }
+  .p-Critical { background: rgba(239,68,68,0.12); color: #dc2626; border: 1px solid rgba(239,68,68,0.2); }
+  .p-High { background: rgba(249,115,22,0.12); color: #ea580c; border: 1px solid rgba(249,115,22,0.2); }
+  .p-Medium { background: rgba(6,182,212,0.12); color: #0891b2; border: 1px solid rgba(6,182,212,0.2); }
+  .p-Low { background: rgba(16,185,129,0.12); color: #059669; border: 1px solid rgba(16,185,129,0.2); }
 
   .status-tag {
-    display: inline-block; padding: 4px 10px;
-    border-radius: 6px; font-size: 11px; font-weight: 600;
+    display: inline-block; padding: 4px 11px;
+    border-radius: 7px; font-size: 11px; font-weight: 700;
   }
 
-  .s-Pending { background: rgba(247,201,72,0.15); color: var(--pending); }
-  .s-In-Progress, .s-Delegated { background: rgba(79,195,247,0.15); color: var(--inprogress); }
-  .s-Completed { background: rgba(67,233,123,0.15); color: var(--completed); }
-  .s-Overdue, .s-Rejected { background: rgba(255,101,132,0.15); color: var(--overdue); }
-  .s-Review { background: rgba(108,99,255,0.15); color: var(--accent); }
+  .s-Pending { background: rgba(245,158,11,0.12); color: #b45309; border: 1px solid rgba(245,158,11,0.2); }
+  .s-In-Progress, .s-Delegated { background: rgba(6,182,212,0.12); color: #0891b2; border: 1px solid rgba(6,182,212,0.2); }
+  .s-Completed { background: rgba(16,185,129,0.12); color: #059669; border: 1px solid rgba(16,185,129,0.2); }
+  .s-Overdue, .s-Rejected { background: rgba(239,68,68,0.12); color: #dc2626; border: 1px solid rgba(239,68,68,0.2); }
+  .s-Review { background: rgba(99,102,241,0.12); color: #4f46e5; border: 1px solid rgba(99,102,241,0.2); }
 
-  .progress-bar { width: 80px; height: 6px; background: var(--panel); border-radius: 3px; overflow: hidden; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); border-radius: 3px; }
+  .progress-bar { width: 80px; height: 6px; background: rgba(99,102,241,0.12); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #a5b4fc); border-radius: 4px; }
 
-  .action-btns { display: flex; gap: 6px; }
+  .action-btns { display: flex; gap: 5px; }
 
-  /* ── FORM / MODAL ── */
+  /* ── MODAL ── */
   .modal-overlay {
     position: fixed; inset: 0; z-index: 200;
-    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    background: rgba(99,102,241,0.1);
+    backdrop-filter: blur(8px);
     display: flex; align-items: center; justify-content: center;
     opacity: 0; pointer-events: none; transition: opacity 0.3s;
   }
@@ -281,112 +435,163 @@
   .modal-overlay.open { opacity: 1; pointer-events: all; }
 
   .modal {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 20px; width: 90%; max-width: 640px;
+    background: rgba(255,255,255,0.80);
+    backdrop-filter: blur(32px) saturate(2.2);
+    -webkit-backdrop-filter: blur(32px) saturate(2.2);
+    border: 1px solid rgba(255,255,255,0.95);
+    border-radius: 22px; width: 90%; max-width: 650px;
     max-height: 90vh; overflow-y: auto;
-    transform: translateY(20px); transition: transform 0.3s;
+    box-shadow: 0 30px 80px rgba(99,102,241,0.2), 0 2px 20px rgba(99,102,241,0.1);
+    transform: translateY(20px) scale(0.97); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
   }
 
-  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-overlay.open .modal { transform: translateY(0) scale(1); }
 
   .modal-head {
-    padding: 24px 28px; border-bottom: 1px solid var(--border);
+    padding: 24px 28px; border-bottom: 1px solid rgba(255,255,255,0.7);
     display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; background: var(--surface); z-index: 1;
+    position: sticky; top: 0;
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(20px);
+    z-index: 1; border-radius: 22px 22px 0 0;
   }
 
-  .modal-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
-  .modal-close { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-size: 18px; }
-  .modal-close:hover { color: var(--text); }
+  .modal-title { font-family: 'Clash Display', sans-serif; font-size: 19px; font-weight: 700; color: var(--ink); }
+
+  .modal-close {
+    background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 9px; width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--muted); font-size: 18px;
+    transition: all 0.2s;
+  }
+  .modal-close:hover { background: rgba(239,68,68,0.1); color: #dc2626; border-color: rgba(239,68,68,0.25); }
 
   .modal-body { padding: 24px 28px; }
-  .modal-footer { padding: 18px 28px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+  .modal-footer { padding: 18px 28px; border-top: 1px solid rgba(255,255,255,0.7); display: flex; gap: 10px; justify-content: flex-end; background: rgba(255,255,255,0.4); border-radius: 0 0 22px 22px; }
 
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .form-group { display: flex; flex-direction: column; gap: 6px; }
   .form-group.full { grid-column: 1 / -1; }
-  .form-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); font-weight: 600; }
+  .form-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); font-weight: 700; }
 
   .form-input, .form-select, .form-textarea {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 10px; padding: 11px 14px;
-    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
-    outline: none; transition: border-color 0.2s;
+    background: rgba(255,255,255,0.75);
+    border: 1.5px solid rgba(255,255,255,0.9);
+    border-radius: 11px; padding: 11px 14px;
+    color: var(--ink); font-family: 'Bricolage Grotesque', sans-serif; font-size: 14px;
+    outline: none; transition: all 0.22s;
     width: 100%;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.06);
   }
 
   .form-input:focus, .form-select:focus, .form-textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+    border-color: rgba(99,102,241,0.5);
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.12), 0 2px 12px rgba(99,102,241,0.1);
   }
 
+  .form-input::placeholder { color: var(--muted-2); }
   .form-textarea { resize: vertical; min-height: 80px; }
-
-  .form-input::placeholder { color: var(--muted); }
-
   .required::after { content: ' *'; color: var(--accent2); }
 
   /* ── TOAST ── */
   .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
 
   .toast {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px 18px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px) saturate(2);
+    border: 1px solid rgba(255,255,255,0.95);
+    border-radius: 14px; padding: 14px 18px;
     display: flex; align-items: center; gap: 12px;
     font-size: 13px; font-weight: 500; min-width: 280px;
-    animation: slideInToast 0.3s ease; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    animation: slideInToast 0.3s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 12px 40px rgba(99,102,241,0.18);
+    color: var(--ink);
   }
 
-  .toast.success { border-left: 3px solid var(--accent3); }
-  .toast.error { border-left: 3px solid var(--accent2); }
+  .toast.success { border-left: 3px solid var(--completed); }
+  .toast.error { border-left: 3px solid var(--overdue); }
   .toast.info { border-left: 3px solid var(--accent); }
 
-  @keyframes slideInToast { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: translateX(0); } }
+  @keyframes slideInToast { from { opacity:0; transform: translateX(30px) scale(0.95); } to { opacity:1; transform: translateX(0) scale(1); } }
 
   /* ── LOADER ── */
   .loader { display: flex; align-items: center; justify-content: center; padding: 60px; flex-direction: column; gap: 16px; }
-  .spin { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .spin { width: 36px; height: 36px; border: 3px solid rgba(99,102,241,0.15); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── AUDIT VIEW ── */
+  /* ── AUDIT ── */
   .audit-list { display: flex; flex-direction: column; gap: 8px; }
 
   .audit-item {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px 18px;
-    display: grid; grid-template-columns: 160px 80px 1fr;
-    gap: 12px; align-items: center;
-    font-size: 13px;
-    transition: background 0.15s;
+    background: rgba(255,255,255,0.58);
+    backdrop-filter: blur(16px) saturate(1.8);
+    border: 1px solid rgba(255,255,255,0.85);
+    border-radius: 14px; padding: 14px 18px;
+    display: grid; grid-template-columns: 170px 80px 1fr;
+    gap: 12px; align-items: center; font-size: 13px;
+    transition: all 0.2s; color: var(--ink);
+    box-shadow: 0 2px 10px rgba(99,102,241,0.05);
   }
 
-  .audit-item:hover { background: var(--panel); }
+  .audit-item:hover { background: rgba(255,255,255,0.78); transform: translateX(4px); }
 
   .audit-time { color: var(--muted); font-size: 12px; }
-  .audit-action-badge { display: inline-flex; justify-content: center; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-  .audit-CREATE { background: rgba(67,233,123,0.15); color: var(--accent3); }
-  .audit-UPDATE { background: rgba(79,195,247,0.15); color: var(--inprogress); }
-  .audit-DELETE { background: rgba(255,101,132,0.15); color: var(--accent2); }
+  .audit-action-badge { display: inline-flex; justify-content: center; padding: 3px 9px; border-radius: 7px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .audit-CREATE { background: rgba(16,185,129,0.12); color: #059669; border: 1px solid rgba(16,185,129,0.2); }
+  .audit-UPDATE { background: rgba(6,182,212,0.12); color: #0891b2; border: 1px solid rgba(6,182,212,0.2); }
+  .audit-DELETE { background: rgba(239,68,68,0.12); color: #dc2626; border: 1px solid rgba(239,68,68,0.2); }
 
   .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
   .empty-icon { font-size: 48px; margin-bottom: 16px; }
   .empty-text { font-size: 15px; font-weight: 500; }
 
-  /* ── DETAIL PANEL ── */
-  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .detail-item { background: var(--panel); border-radius: 10px; padding: 14px; }
-  .detail-key { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 6px; }
-  .detail-val { font-size: 14px; font-weight: 500; }
+  /* ── DETAIL ── */
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .detail-item {
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.85);
+    border-radius: 12px; padding: 14px;
+    box-shadow: 0 2px 10px rgba(99,102,241,0.05);
+  }
+
+  .detail-key { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 6px; font-weight: 700; }
+  .detail-val { font-size: 14px; font-weight: 500; color: var(--ink); }
   .detail-item.full { grid-column: 1 / -1; }
 
-  .timeline { display: flex; flex-direction: column; gap: 0; margin-top: 12px; }
-  .tl-item { display: flex; gap: 14px; padding-bottom: 16px; position: relative; }
-  .tl-item::before { content: ''; position: absolute; left: 11px; top: 24px; bottom: 0; width: 1px; background: var(--border); }
-  .tl-item:last-child::before { display: none; }
-  .tl-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; margin-top: 2px; }
-  .tl-content { font-size: 13px; }
-  .tl-label { font-weight: 600; color: var(--text); }
-  .tl-date { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  /* ── INIT ── */
+  .init-overlay {
+    position: fixed; inset: 0; z-index: 500;
+    background: linear-gradient(135deg, #dbeafe 0%, #ede9fe 50%, #fce7f3 100%);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 20px;
+    transition: opacity 0.5s;
+  }
+
+  .init-logo { font-family: 'Clash Display', sans-serif; font-size: 34px; font-weight: 700; color: var(--ink); }
+  .init-logo span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .init-sub { color: var(--muted); font-size: 14px; font-weight: 500; }
+
+  .init-bar {
+    width: 220px; height: 4px;
+    background: rgba(99,102,241,0.15); border-radius: 4px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.15);
+  }
+
+  .init-progress { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 4px; animation: initLoad 1.5s cubic-bezier(0.4,0,0.2,1) forwards; }
+  @keyframes initLoad { from { width: 0; } to { width: 100%; } }
+
+  .init-card {
+    background: rgba(255,255,255,0.65);
+    backdrop-filter: blur(24px) saturate(2);
+    border: 1px solid rgba(255,255,255,0.9);
+    border-radius: 24px; padding: 40px 48px;
+    text-align: center; display: flex; flex-direction: column; gap: 18px; align-items: center;
+    box-shadow: 0 20px 60px rgba(99,102,241,0.18);
+  }
 
   /* ── RESPONSIVE ── */
   @media (max-width: 900px) {
@@ -402,40 +607,27 @@
     .topbar { padding: 14px 16px; }
   }
 
-  @media (max-width: 600px) {
-    .stats-grid { grid-template-columns: 1fr 1fr; }
-  }
-
-  /* ── INIT OVERLAY ── */
-  .init-overlay {
-    position: fixed; inset: 0; z-index: 500;
-    background: var(--ink);
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column; gap: 20px;
-  }
-
-  .init-logo { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; }
-  .init-logo span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .init-sub { color: var(--muted); font-size: 14px; }
-  .init-bar { width: 200px; height: 3px; background: var(--panel); border-radius: 3px; overflow: hidden; }
-  .init-progress { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; animation: initLoad 1.5s ease forwards; }
-  @keyframes initLoad { from { width: 0; } to { width: 100%; } }
+  @media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
 
   /* scrollbar */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+  ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.25); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.45); }
 </style>
 </head>
 <body>
 
+<div class="blob-mid"></div>
+
 <!-- Init Overlay -->
 <div class="init-overlay" id="initOverlay">
-  <div class="logo-icon" style="width:56px;height:56px;font-size:28px;border-radius:16px;">🎯</div>
-  <div class="init-logo">Delegation <span>Handler</span></div>
-  <div class="init-sub">MIS Automation System - Satanand</div>
-  <div class="init-bar"><div class="init-progress"></div></div>
+  <div class="init-card">
+    <div class="logo-icon" style="width:60px;height:60px;font-size:28px;border-radius:18px;">🎯</div>
+    <div class="init-logo">Delegation <span>Handler</span></div>
+    <div class="init-sub">MIS Automation System · Satanand</div>
+    <div class="init-bar"><div class="init-progress"></div></div>
+  </div>
 </div>
 
 <!-- Sidebar -->
@@ -445,7 +637,7 @@
       <div class="logo-icon">🎯</div>
       <div>
         <div>DelegateHub</div>
-        <div class="logo-sub">Created by Satanand</div>
+        <div class="logo-sub">by Satanand</div>
       </div>
     </div>
   </div>
@@ -488,7 +680,7 @@
     <div class="user-chip">
       <div class="avatar">M</div>
       <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text)">MIS Executive</div>
+        <div style="font-size:13px;font-weight:600;color:var(--ink)">MIS Executive</div>
         <div style="font-size:11px;color:var(--muted)">Administrator</div>
       </div>
     </div>
@@ -512,7 +704,7 @@
 
   <div class="content">
 
-    <!-- ── DASHBOARD VIEW ── -->
+    <!-- DASHBOARD -->
     <div class="view active" id="view-dashboard">
       <div class="stats-grid" id="statsGrid">
         <div class="loader"><div class="spin"></div></div>
@@ -521,7 +713,7 @@
       <div id="recentTable"></div>
     </div>
 
-    <!-- ── DELEGATIONS VIEW ── -->
+    <!-- DELEGATIONS -->
     <div class="view" id="view-delegations">
       <div class="table-wrap">
         <div class="table-header">
@@ -545,11 +737,7 @@
         <div style="overflow-x:auto">
           <table class="data-table">
             <thead>
-              <tr>
-                <th>ID</th><th>Title</th><th>Delegated To</th>
-                <th>Priority</th><th>Due Date</th><th>Status</th>
-                <th>Progress</th><th>Actions</th>
-              </tr>
+              <tr><th>ID</th><th>Title</th><th>Delegated To</th><th>Priority</th><th>Due Date</th><th>Status</th><th>Progress</th><th>Actions</th></tr>
             </thead>
             <tbody id="delegationsBody">
               <tr><td colspan="8"><div class="loader"><div class="spin"></div><span style="color:var(--muted)">Loading...</span></div></td></tr>
@@ -559,12 +747,10 @@
       </div>
     </div>
 
-    <!-- ── MY TASKS VIEW ── -->
+    <!-- MY TASKS -->
     <div class="view" id="view-myTasks">
       <div class="table-wrap">
-        <div class="table-header">
-          <div class="table-title">My Tasks</div>
-        </div>
+        <div class="table-header"><div class="table-title">My Tasks</div></div>
         <div style="overflow-x:auto">
           <table class="data-table">
             <thead>
@@ -578,12 +764,10 @@
       </div>
     </div>
 
-    <!-- ── TEAM VIEW ── -->
+    <!-- TEAM -->
     <div class="view" id="view-team">
       <div class="table-wrap">
-        <div class="table-header">
-          <div class="table-title">Team Members</div>
-        </div>
+        <div class="table-header"><div class="table-title">Team Members</div></div>
         <div style="overflow-x:auto">
           <table class="data-table">
             <thead>
@@ -597,10 +781,10 @@
       </div>
     </div>
 
-    <!-- ── AUDIT VIEW ── -->
+    <!-- AUDIT -->
     <div class="view" id="view-audit">
       <div style="margin-bottom:20px">
-        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px">Audit Trail</div>
+        <div style="font-family:'Clash Display',sans-serif;font-size:20px;font-weight:700;margin-bottom:6px;color:var(--ink)">Audit Trail</div>
         <div style="color:var(--muted);font-size:13px">Complete history of all delegation actions (last 50 entries)</div>
       </div>
       <div class="audit-list" id="auditList">
@@ -608,10 +792,10 @@
       </div>
     </div>
 
-  </div><!-- /content -->
+  </div>
 </main>
 
-<!-- ── CREATE/EDIT MODAL ── -->
+<!-- CREATE/EDIT MODAL -->
 <div class="modal-overlay" id="createModal">
   <div class="modal">
     <div class="modal-head">
@@ -664,7 +848,8 @@
         </div>
         <div class="form-group" id="progressGroup" style="display:none">
           <label class="form-label">Progress: <span id="progressVal">0</span>%</label>
-          <input type="range" id="f-progress" min="0" max="100" value="0" style="width:100%;accent-color:var(--accent)"
+          <input type="range" id="f-progress" min="0" max="100" value="0"
+            style="width:100%;accent-color:var(--accent)"
             oninput="document.getElementById('progressVal').textContent=this.value">
         </div>
         <div class="form-group full">
@@ -680,7 +865,7 @@
   </div>
 </div>
 
-<!-- ── DETAIL MODAL ── -->
+<!-- DETAIL MODAL -->
 <div class="modal-overlay" id="detailModal">
   <div class="modal">
     <div class="modal-head">
@@ -694,20 +879,13 @@
   </div>
 </div>
 
-<!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-// ────────────────────────────────────────────────────────────
-// STATE
-// ────────────────────────────────────────────────────────────
 let allDelegations = [];
 let allUsers = [];
 let currentView = 'dashboard';
 
-// ────────────────────────────────────────────────────────────
-// GAS MOCK — runs when NOT inside Google Apps Script
-// ────────────────────────────────────────────────────────────
 const IS_GAS = (typeof google !== 'undefined' && google.script && google.script.run);
 
 const MOCK_USERS = [
@@ -721,19 +899,19 @@ const MOCK_USERS = [
 
 let MOCK_DELEGATIONS = [
   { id:'DEL-A1B2C3-X1', title:'Monthly MIS Report Compilation', description:'Compile all department MIS reports for October review meeting.', delegatedBy:'Amit Singh', delegatedTo:'Priya Sharma', priority:'High', category:'IT / MIS', dueDate:'2026-03-10', createdDate:'01/03/2026 09:00', status:'In Progress', progress:60, notes:'Include finance & ops data.', attachments:'', lastUpdated:'03/03/2026 11:00', completedDate:'' },
-  { id:'DEL-D4E5F6-Y2', title:'Vendor Invoice Reconciliation',   description:'Reconcile all pending vendor invoices for Q4 FY26.',           delegatedBy:'Rajesh Kumar',  delegatedTo:'Vikram Das',    priority:'Critical', category:'Finance',  dueDate:'2026-03-07', createdDate:'28/02/2026 10:00', status:'Overdue',     progress:30, notes:'Escalate if delayed.', attachments:'', lastUpdated:'02/03/2026 09:00', completedDate:'' },
-  { id:'DEL-G7H8I9-Z3', title:'New Employee Onboarding Checklist', description:'Prepare onboarding kit for 3 new joiners.',                   delegatedBy:'Sunita Patel',  delegatedTo:'Neha Joshi',    priority:'Medium',   category:'HR',       dueDate:'2026-03-15', createdDate:'02/03/2026 08:30', status:'Pending',     progress:0,  notes:'Use standard HR template.', attachments:'', lastUpdated:'02/03/2026 08:30', completedDate:'' },
-  { id:'DEL-J1K2L3-W4', title:'Sales Pipeline Dashboard Update',  description:'Update the Power BI sales pipeline with latest CRM data.',    delegatedBy:'Amit Singh',    delegatedTo:'Vikram Das',    priority:'High',     category:'Sales',    dueDate:'2026-03-12', createdDate:'01/03/2026 14:00', status:'Delegated',   progress:20, notes:'Sync with CRM team.', attachments:'', lastUpdated:'03/03/2026 14:00', completedDate:'' },
-  { id:'DEL-M5N6O7-V5', title:'IT Asset Audit Q1',               description:'Complete physical verification of all IT assets.',             delegatedBy:'Rajesh Kumar',  delegatedTo:'Amit Singh',    priority:'Low',      category:'IT / MIS', dueDate:'2026-03-20', createdDate:'03/03/2026 10:00', status:'Pending',     progress:0,  notes:'Use asset register from last year.', attachments:'', lastUpdated:'03/03/2026 10:00', completedDate:'' },
-  { id:'DEL-P8Q9R0-U6', title:'Payroll Compliance Check',        description:'Verify payroll compliance for all 120 employees.',             delegatedBy:'Sunita Patel',  delegatedTo:'Priya Sharma',  priority:'Critical', category:'Finance',  dueDate:'2026-03-05', createdDate:'25/02/2026 09:00', status:'Completed',   progress:100, notes:'Done and verified.', attachments:'', lastUpdated:'05/03/2026 10:00', completedDate:'05/03/2026' },
+  { id:'DEL-D4E5F6-Y2', title:'Vendor Invoice Reconciliation',   description:'Reconcile all pending vendor invoices for Q4 FY26.', delegatedBy:'Rajesh Kumar', delegatedTo:'Vikram Das', priority:'Critical', category:'Finance', dueDate:'2026-03-07', createdDate:'28/02/2026 10:00', status:'Overdue', progress:30, notes:'Escalate if delayed.', attachments:'', lastUpdated:'02/03/2026 09:00', completedDate:'' },
+  { id:'DEL-G7H8I9-Z3', title:'New Employee Onboarding Checklist', description:'Prepare onboarding kit for 3 new joiners.', delegatedBy:'Sunita Patel', delegatedTo:'Neha Joshi', priority:'Medium', category:'HR', dueDate:'2026-03-15', createdDate:'02/03/2026 08:30', status:'Pending', progress:0, notes:'Use standard HR template.', attachments:'', lastUpdated:'02/03/2026 08:30', completedDate:'' },
+  { id:'DEL-J1K2L3-W4', title:'Sales Pipeline Dashboard Update', description:'Update the Power BI sales pipeline with latest CRM data.', delegatedBy:'Amit Singh', delegatedTo:'Vikram Das', priority:'High', category:'Sales', dueDate:'2026-03-12', createdDate:'01/03/2026 14:00', status:'Delegated', progress:20, notes:'Sync with CRM team.', attachments:'', lastUpdated:'03/03/2026 14:00', completedDate:'' },
+  { id:'DEL-M5N6O7-V5', title:'IT Asset Audit Q1', description:'Complete physical verification of all IT assets.', delegatedBy:'Rajesh Kumar', delegatedTo:'Amit Singh', priority:'Low', category:'IT / MIS', dueDate:'2026-03-20', createdDate:'03/03/2026 10:00', status:'Pending', progress:0, notes:'Use asset register from last year.', attachments:'', lastUpdated:'03/03/2026 10:00', completedDate:'' },
+  { id:'DEL-P8Q9R0-U6', title:'Payroll Compliance Check', description:'Verify payroll compliance for all 120 employees.', delegatedBy:'Sunita Patel', delegatedTo:'Priya Sharma', priority:'Critical', category:'Finance', dueDate:'2026-03-05', createdDate:'25/02/2026 09:00', status:'Completed', progress:100, notes:'Done and verified.', attachments:'', lastUpdated:'05/03/2026 10:00', completedDate:'05/03/2026' },
 ];
 
 let MOCK_AUDIT = [
   { timestamp:'05/03/2026 10:00:00', action:'UPDATE', delegationId:'DEL-P8Q9R0-U6', performedBy:'Priya Sharma', details:'Status → Completed, Progress → 100%' },
-  { timestamp:'03/03/2026 14:00:00', action:'CREATE', delegationId:'DEL-J1K2L3-W4', performedBy:'Amit Singh',   details:'New delegation: "Sales Pipeline Dashboard Update" assigned to Vikram Das' },
+  { timestamp:'03/03/2026 14:00:00', action:'CREATE', delegationId:'DEL-J1K2L3-W4', performedBy:'Amit Singh', details:'New delegation: "Sales Pipeline Dashboard Update" assigned to Vikram Das' },
   { timestamp:'03/03/2026 10:00:00', action:'CREATE', delegationId:'DEL-M5N6O7-V5', performedBy:'Rajesh Kumar', details:'New delegation: "IT Asset Audit Q1" assigned to Amit Singh' },
-  { timestamp:'02/03/2026 09:00:00', action:'UPDATE', delegationId:'DEL-D4E5F6-Y2', performedBy:'System',       details:'Status → Overdue, Progress → 30%' },
-  { timestamp:'01/03/2026 09:00:00', action:'CREATE', delegationId:'DEL-A1B2C3-X1', performedBy:'Amit Singh',   details:'New delegation: "Monthly MIS Report Compilation" assigned to Priya Sharma' },
+  { timestamp:'02/03/2026 09:00:00', action:'UPDATE', delegationId:'DEL-D4E5F6-Y2', performedBy:'System', details:'Status → Overdue, Progress → 30%' },
+  { timestamp:'01/03/2026 09:00:00', action:'CREATE', delegationId:'DEL-A1B2C3-X1', performedBy:'Amit Singh', details:'New delegation: "Monthly MIS Report Compilation" assigned to Priya Sharma' },
 ];
 
 function gasCall(fnName, args, successCb) {
@@ -741,7 +919,6 @@ function gasCall(fnName, args, successCb) {
     let runner = google.script.run.withSuccessHandler(successCb).withFailureHandler(e => showToast('error', String(e)));
     runner[fnName](...(args || []));
   } else {
-    // Mock responses
     setTimeout(() => {
       try { successCb(mockFn(fnName, args)); } catch(e) { showToast('error', 'Mock error: ' + e); }
     }, 300);
@@ -757,12 +934,11 @@ function mockFn(fn, args) {
     case 'getDashboardStats': {
       const data = MOCK_DELEGATIONS;
       const stats = {
-        total: data.length,
-        pending: data.filter(d => d.status==='Pending').length,
-        inProgress: data.filter(d => d.status==='In Progress').length,
-        completed: data.filter(d => d.status==='Completed').length,
-        overdue: data.filter(d => d.status==='Overdue').length,
-        critical: data.filter(d => d.priority==='Critical').length,
+        total: data.length, pending: data.filter(d=>d.status==='Pending').length,
+        inProgress: data.filter(d=>d.status==='In Progress').length,
+        completed: data.filter(d=>d.status==='Completed').length,
+        overdue: data.filter(d=>d.status==='Overdue').length,
+        critical: data.filter(d=>d.priority==='Critical').length,
         completionRate: Math.round((data.filter(d=>d.status==='Completed').length/data.length)*100),
         byPriority: { Critical:2, High:2, Medium:1, Low:1 },
         byStatus: { Pending:2, 'In Progress':1, Delegated:1, Completed:1, Overdue:1, Review:0, Rejected:0 }
@@ -771,318 +947,195 @@ function mockFn(fn, args) {
     }
     case 'createDelegation': {
       const d = args[0];
-      const newId = 'DEL-' + Math.random().toString(36).substr(2,6).toUpperCase() + '-' + Math.random().toString(36).substr(2,2).toUpperCase();
-      const now = new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+      const newId = 'DEL-'+Math.random().toString(36).substr(2,6).toUpperCase()+'-'+Math.random().toString(36).substr(2,2).toUpperCase();
+      const now = new Date().toLocaleDateString('en-GB')+' '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
       MOCK_DELEGATIONS.push({ id:newId, title:d.title, description:d.description, delegatedBy:d.delegatedBy, delegatedTo:d.delegatedTo, priority:d.priority, category:d.category, dueDate:d.dueDate, createdDate:now, status:'Pending', progress:0, notes:d.notes||'', attachments:'', lastUpdated:now, completedDate:'' });
-      MOCK_AUDIT.unshift({ timestamp: now+':00', action:'CREATE', delegationId:newId, performedBy:d.delegatedBy, details:`New delegation: "${d.title}" assigned to ${d.delegatedTo}` });
-      return { success: true, id: newId, message: '✅ Delegation created successfully!' };
+      MOCK_AUDIT.unshift({ timestamp:now+':00', action:'CREATE', delegationId:newId, performedBy:d.delegatedBy, details:`New delegation: "${d.title}" assigned to ${d.delegatedTo}` });
+      return { success:true, id:newId, message:'✅ Delegation created successfully!' };
     }
     case 'updateDelegation': {
-      const d = args[0];
-      const idx = MOCK_DELEGATIONS.findIndex(x => x.id === d.id);
-      if (idx > -1) {
-        Object.assign(MOCK_DELEGATIONS[idx], { title:d.title, description:d.description, delegatedTo:d.delegatedTo, priority:d.priority, category:d.category, dueDate:d.dueDate, status:d.status, progress:d.progress, notes:d.notes });
-        MOCK_AUDIT.unshift({ timestamp: new Date().toLocaleString('en-GB'), action:'UPDATE', delegationId:d.id, performedBy:d.updatedBy||'User', details:`Status → ${d.status}, Progress → ${d.progress}%` });
-      }
-      return { success: true, message: '✅ Delegation updated!' };
+      const d = args[0]; const idx = MOCK_DELEGATIONS.findIndex(x=>x.id===d.id);
+      if (idx>-1) { Object.assign(MOCK_DELEGATIONS[idx],{title:d.title,description:d.description,delegatedTo:d.delegatedTo,priority:d.priority,category:d.category,dueDate:d.dueDate,status:d.status,progress:d.progress,notes:d.notes}); MOCK_AUDIT.unshift({timestamp:new Date().toLocaleString('en-GB'),action:'UPDATE',delegationId:d.id,performedBy:d.updatedBy||'User',details:`Status → ${d.status}, Progress → ${d.progress}%`}); }
+      return { success:true, message:'✅ Delegation updated!' };
     }
     case 'deleteDelegation': {
-      const id = args[0];
-      MOCK_DELEGATIONS = MOCK_DELEGATIONS.filter(x => x.id !== id);
-      MOCK_AUDIT.unshift({ timestamp: new Date().toLocaleString('en-GB'), action:'DELETE', delegationId:id, performedBy:args[1]||'User', details:'Delegation permanently removed' });
-      return { success: true, message: 'Delegation deleted.' };
+      const id=args[0]; MOCK_DELEGATIONS=MOCK_DELEGATIONS.filter(x=>x.id!==id);
+      MOCK_AUDIT.unshift({timestamp:new Date().toLocaleString('en-GB'),action:'DELETE',delegationId:id,performedBy:args[1]||'User',details:'Delegation permanently removed'});
+      return { success:true, message:'Delegation deleted.' };
     }
     case 'exportToCSV': {
-      const headers = ['ID','Title','Description','Delegated By','Delegated To','Priority','Category','Due Date','Status','Progress %'];
-      const rows = MOCK_DELEGATIONS.map(d => [d.id,d.title,d.description,d.delegatedBy,d.delegatedTo,d.priority,d.category,d.dueDate,d.status,d.progress]);
-      const csv = [headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-      return { success: true, csv, filename: `delegations_demo_${Date.now()}.csv` };
+      const headers=['ID','Title','Description','Delegated By','Delegated To','Priority','Category','Due Date','Status','Progress %'];
+      const rows=MOCK_DELEGATIONS.map(d=>[d.id,d.title,d.description,d.delegatedBy,d.delegatedTo,d.priority,d.category,d.dueDate,d.status,d.progress]);
+      const csv=[headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+      return { success:true, csv, filename:`delegations_demo_${Date.now()}.csv` };
     }
-    default: return { success: false, message: 'Unknown function: ' + fn };
+    default: return { success:false, message:'Unknown: '+fn };
   }
 }
 
-// ────────────────────────────────────────────────────────────
-// INIT
-// ────────────────────────────────────────────────────────────
 window.onload = function() {
   document.getElementById('f-due').min = new Date().toISOString().split('T')[0];
-  if (window.innerWidth <= 900) document.getElementById('menuBtn').style.display = 'flex';
+  if (window.innerWidth<=900) document.getElementById('menuBtn').style.display='flex';
   if (!IS_GAS) {
     const banner = document.createElement('div');
-    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999;background:rgba(247,201,72,0.15);border-bottom:1px solid rgba(247,201,72,0.3);padding:8px 20px;text-align:center;font-size:12px;color:#f7c948;';
-    banner.innerHTML = '⚡ <strong>Demo Mode</strong> — Running with sample data. Deploy to Google Apps Script for live Google Sheets integration.';
+    banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:999;background:rgba(245,158,11,0.12);border-bottom:1px solid rgba(245,158,11,0.3);padding:8px 20px;text-align:center;font-size:12px;color:#b45309;backdrop-filter:blur(12px);';
+    banner.innerHTML='⚡ <strong>Demo Mode</strong> — Running with sample data. Deploy to Google Apps Script for live Google Sheets integration.';
     document.body.appendChild(banner);
-    document.querySelector('.main').style.marginTop = '36px';
+    document.querySelector('.main').style.marginTop='36px';
   }
   gasCall('initializeSheets', [], () => loadAll());
 };
 
 function loadAll() {
   setTimeout(() => {
-    document.getElementById('initOverlay').style.opacity = '0';
-    setTimeout(() => document.getElementById('initOverlay').style.display = 'none', 400);
-  }, 1600);
-  loadUsers();
-  loadDashboard();
+    document.getElementById('initOverlay').style.opacity='0';
+    setTimeout(()=>document.getElementById('initOverlay').style.display='none',500);
+  }, 1700);
+  loadUsers(); loadDashboard();
 }
 
-// ────────────────────────────────────────────────────────────
-// VIEW MANAGEMENT
-// ────────────────────────────────────────────────────────────
 function showView(name) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById('view-' + name).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(i => {
-    if (i.getAttribute('onclick') && i.getAttribute('onclick').includes(name)) i.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(i=>{
+    if (i.getAttribute('onclick')&&i.getAttribute('onclick').includes(name)) i.classList.add('active');
   });
-  currentView = name;
-  const titles = {
-    dashboard: '📊 <span>Dashboard</span>',
-    delegations: '📋 <span>All Delegations</span>',
-    myTasks: '✅ <span>My Tasks</span>',
-    team: '👥 <span>Team Members</span>',
-    audit: '🔍 <span>Audit Log</span>'
-  };
-  document.getElementById('pageTitle').innerHTML = titles[name] || name;
-  if (name === 'delegations') loadDelegations();
-  if (name === 'myTasks') loadMyTasks();
-  if (name === 'team') loadTeam();
-  if (name === 'audit') loadAudit();
-  if (window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('open');
+  currentView=name;
+  const titles={dashboard:'📊 <span>Dashboard</span>',delegations:'📋 <span>All Delegations</span>',myTasks:'✅ <span>My Tasks</span>',team:'👥 <span>Team Members</span>',audit:'🔍 <span>Audit Log</span>'};
+  document.getElementById('pageTitle').innerHTML=titles[name]||name;
+  if (name==='delegations') loadDelegations();
+  if (name==='myTasks') loadMyTasks();
+  if (name==='team') loadTeam();
+  if (name==='audit') loadAudit();
+  if (window.innerWidth<=900) document.getElementById('sidebar').classList.remove('open');
 }
 
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-}
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); }
 
-function refreshData() {
-  showToast('info', 'Refreshing data...');
+function refreshData(){
+  showToast('info','Refreshing data...');
   loadUsers();
-  if (currentView === 'dashboard') loadDashboard();
-  else if (currentView === 'delegations') loadDelegations();
-  else if (currentView === 'myTasks') loadMyTasks();
-  else if (currentView === 'team') loadTeam();
-  else if (currentView === 'audit') loadAudit();
+  if(currentView==='dashboard') loadDashboard();
+  else if(currentView==='delegations') loadDelegations();
+  else if(currentView==='myTasks') loadMyTasks();
+  else if(currentView==='team') loadTeam();
+  else if(currentView==='audit') loadAudit();
 }
 
-// ────────────────────────────────────────────────────────────
-// LOAD USERS
-// ────────────────────────────────────────────────────────────
-function loadUsers() {
-  gasCall('getUsers', [], res => {
-    if (res.success) { allUsers = res.data; populateUserDropdowns(); }
+function loadUsers(){
+  gasCall('getUsers',[],res=>{if(res.success){allUsers=res.data;populateUserDropdowns();}});
+}
+
+function populateUserDropdowns(){
+  const byEl=document.getElementById('f-by'); const toEl=document.getElementById('f-to');
+  byEl.innerHTML=toEl.innerHTML='<option value="">-- Select --</option>';
+  allUsers.forEach(u=>{
+    byEl.innerHTML+=`<option value="${u.name}">${u.name} (${u.department})</option>`;
+    toEl.innerHTML+=`<option value="${u.name}">${u.name} (${u.department})</option>`;
   });
 }
 
-function populateUserDropdowns() {
-  const byEl = document.getElementById('f-by');
-  const toEl = document.getElementById('f-to');
-  byEl.innerHTML = toEl.innerHTML = '<option value="">-- Select --</option>';
-  allUsers.forEach(u => {
-    byEl.innerHTML += `<option value="${u.name}">${u.name} (${u.department})</option>`;
-    toEl.innerHTML += `<option value="${u.name}">${u.name} (${u.department})</option>`;
-  });
+function loadDashboard(){
+  document.getElementById('statsGrid').innerHTML='<div class="loader"><div class="spin"></div></div>';
+  gasCall('getDashboardStats',[],res=>{if(res.success)renderDashboard(res);else showToast('error',res.message);});
 }
 
-// ────────────────────────────────────────────────────────────
-// DASHBOARD
-// ────────────────────────────────────────────────────────────
-function loadDashboard() {
-  document.getElementById('statsGrid').innerHTML = '<div class="loader"><div class="spin"></div></div>';
-  gasCall('getDashboardStats', [], res => {
-    if (res.success) renderDashboard(res);
-    else showToast('error', res.message);
-  });
-}
+function renderDashboard(res){
+  if(!res.success){showToast('error',res.message);return;}
+  const s=res.stats; allDelegations=res.recentDelegations||[];
+  document.getElementById('pendingBadge').textContent=s.pending+s.overdue;
 
-function renderDashboard(res) {
-  if (!res.success) { showToast('error', res.message); return; }
-  const s = res.stats;
-  allDelegations = res.recentDelegations || [];
-  document.getElementById('pendingBadge').textContent = s.pending + s.overdue;
-
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-card s-total">
-      <div class="stat-label">Total Delegations</div>
-      <div class="stat-value">${s.total}</div>
-      <div class="stat-icon">📋</div>
-    </div>
-    <div class="stat-card s-pending">
-      <div class="stat-label">Pending</div>
-      <div class="stat-value" style="color:var(--pending)">${s.pending}</div>
-      <div class="stat-icon">⏳</div>
-    </div>
-    <div class="stat-card s-progress">
-      <div class="stat-label">In Progress</div>
-      <div class="stat-value" style="color:var(--inprogress)">${s.inProgress}</div>
-      <div class="stat-icon">🔄</div>
-    </div>
-    <div class="stat-card s-completed">
-      <div class="stat-label">Completed</div>
-      <div class="stat-value" style="color:var(--completed)">${s.completed}</div>
-      <div class="stat-icon">✅</div>
-    </div>
-    <div class="stat-card s-overdue">
-      <div class="stat-label">Overdue</div>
-      <div class="stat-value" style="color:var(--overdue)">${s.overdue}</div>
-      <div class="stat-icon">🚨</div>
-    </div>
-    <div class="stat-card s-critical">
-      <div class="stat-label">Critical Tasks</div>
-      <div class="stat-value" style="color:var(--critical)">${s.critical}</div>
-      <div class="stat-icon">⚡</div>
-    </div>
-    <div class="stat-card s-rate">
-      <div class="stat-label">Completion Rate</div>
-      <div class="stat-value" style="color:var(--accent3)">${s.completionRate}%</div>
-      <div class="stat-icon">📈</div>
-    </div>
+  document.getElementById('statsGrid').innerHTML=`
+    <div class="stat-card s-total"><div class="stat-label">Total Delegations</div><div class="stat-value">${s.total}</div><div class="stat-icon">📋</div></div>
+    <div class="stat-card s-pending"><div class="stat-label">Pending</div><div class="stat-value" style="color:var(--pending)">${s.pending}</div><div class="stat-icon">⏳</div></div>
+    <div class="stat-card s-progress"><div class="stat-label">In Progress</div><div class="stat-value" style="color:var(--inprogress)">${s.inProgress}</div><div class="stat-icon">🔄</div></div>
+    <div class="stat-card s-completed"><div class="stat-label">Completed</div><div class="stat-value" style="color:var(--completed)">${s.completed}</div><div class="stat-icon">✅</div></div>
+    <div class="stat-card s-overdue"><div class="stat-label">Overdue</div><div class="stat-value" style="color:var(--overdue)">${s.overdue}</div><div class="stat-icon">🚨</div></div>
+    <div class="stat-card s-critical"><div class="stat-label">Critical Tasks</div><div class="stat-value" style="color:var(--critical)">${s.critical}</div><div class="stat-icon">⚡</div></div>
+    <div class="stat-card s-rate"><div class="stat-label">Completion Rate</div><div class="stat-value" style="color:var(--completed)">${s.completionRate}%</div><div class="stat-icon">📈</div></div>
   `;
 
-  // Charts
-  const pColors = { Critical:'var(--critical)', High:'var(--high)', Medium:'var(--medium)', Low:'var(--low)' };
-  const sColors = { Pending:'var(--pending)', 'In Progress':'var(--inprogress)', Completed:'var(--completed)', Overdue:'var(--overdue)', Delegated:'var(--accent)', Review:'#b39ddb', Rejected:'var(--accent2)' };
+  const pColors={Critical:'#ef4444',High:'#f97316',Medium:'#06b6d4',Low:'#10b981'};
+  const sColors={Pending:'#f59e0b','In Progress':'#06b6d4',Completed:'#10b981',Overdue:'#ef4444',Delegated:'#6366f1',Review:'#8b5cf6',Rejected:'#ec4899'};
+  const maxP=Math.max(...Object.values(s.byPriority),1);
+  const priorityBars=Object.entries(s.byPriority).map(([k,v])=>`<div class="bar-row"><div class="bar-label">${k}</div><div class="bar-track"><div class="bar-fill" style="width:${v/maxP*100}%;background:${pColors[k]}"></div></div><div class="bar-val">${v}</div></div>`).join('');
+  const statusEntries=Object.entries(s.byStatus).filter(([,v])=>v>0);
+  const total2=statusEntries.reduce((a,[,v])=>a+v,0)||1;
+  let offset=0;
+  const slices=statusEntries.map(([k,v])=>{const pct=v/total2*100;const s2=`<circle cx="60" cy="60" r="40" fill="none" stroke="${sColors[k]||'#888'}" stroke-width="18" stroke-dasharray="${pct*2.51327} ${251.327-pct*2.51327}" stroke-dashoffset="${-offset*2.51327}" transform="rotate(-90 60 60)"/>`;offset+=pct;return s2;}).join('');
+  const legend=statusEntries.map(([k,v])=>`<div class="legend-item"><div class="legend-dot" style="background:${sColors[k]||'#888'}"></div><span style="color:var(--muted)">${k}:</span>&nbsp;<strong>${v}</strong></div>`).join('');
 
-  const maxP = Math.max(...Object.values(s.byPriority), 1);
-  const priorityBars = Object.entries(s.byPriority).map(([k, v]) => `
-    <div class="bar-row">
-      <div class="bar-label">${k}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${(v/maxP*100)}%;background:${pColors[k]}"></div></div>
-      <div class="bar-val">${v}</div>
-    </div>
-  `).join('');
-
-  const statusEntries = Object.entries(s.byStatus).filter(([, v]) => v > 0);
-  const totalForDonut = statusEntries.reduce((a, [, v]) => a + v, 0) || 1;
-  let offset = 0;
-  const slices = statusEntries.map(([k, v]) => {
-    const pct = v / totalForDonut * 100;
-    const slice = `<circle cx="60" cy="60" r="40" fill="none" stroke="${sColors[k]||'#888'}" stroke-width="18" stroke-dasharray="${pct * 2.51327} ${251.327 - pct * 2.51327}" stroke-dashoffset="${-offset * 2.51327}" transform="rotate(-90 60 60)"/>`;
-    offset += pct;
-    return slice;
-  }).join('');
-
-  const legend = statusEntries.map(([k, v]) => `
-    <div class="legend-item"><div class="legend-dot" style="background:${sColors[k]||'#888'}"></div><span style="color:var(--muted)">${k}:</span>&nbsp;<strong>${v}</strong></div>
-  `).join('');
-
-  document.getElementById('chartsRow').style.display = 'grid';
-  document.getElementById('chartsRow').innerHTML = `
-    <div class="chart-card">
-      <div class="chart-title">Delegations by Priority</div>
-      <div class="bar-chart">${priorityBars}</div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Status Distribution</div>
-      <div class="donut-wrap">
-        <svg class="donut-svg" width="120" height="120" viewBox="0 0 120 120">${slices}</svg>
-        <div class="donut-legend">${legend}</div>
-      </div>
-    </div>
+  document.getElementById('chartsRow').style.display='grid';
+  document.getElementById('chartsRow').innerHTML=`
+    <div class="chart-card"><div class="chart-title">Delegations by Priority</div><div class="bar-chart">${priorityBars}</div></div>
+    <div class="chart-card"><div class="chart-title">Status Distribution</div><div class="donut-wrap"><svg width="120" height="120" viewBox="0 0 120 120">${slices}</svg><div class="donut-legend">${legend}</div></div></div>
   `;
 
-  // Recent delegations
-  document.getElementById('recentTable').innerHTML = `
+  document.getElementById('recentTable').innerHTML=`
     <div class="table-wrap">
-      <div class="table-header">
-        <div class="table-title">Recent Activity</div>
-        <button class="btn btn-ghost btn-sm" onclick="showView('delegations')">View All →</button>
-      </div>
+      <div class="table-header"><div class="table-title">Recent Activity</div><button class="btn btn-ghost btn-sm" onclick="showView('delegations')">View All →</button></div>
       <div style="overflow-x:auto">
         <table class="data-table">
           <thead><tr><th>ID</th><th>Title</th><th>Assigned To</th><th>Priority</th><th>Due</th><th>Status</th></tr></thead>
-          <tbody>${res.recentDelegations.length ? res.recentDelegations.map(d => `
+          <tbody>${res.recentDelegations.length?res.recentDelegations.map(d=>`
             <tr>
-              <td style="font-size:11px;color:var(--muted)">${d.id}</td>
+              <td style="font-size:11px;color:var(--muted-2);font-family:monospace">${d.id}</td>
               <td><strong>${esc(d.title)}</strong></td>
               <td>${esc(d.delegatedTo)}</td>
               <td><span class="priority-tag p-${d.priority}">● ${d.priority}</span></td>
-              <td style="color:${isOverdueDue(d.dueDate) ? 'var(--overdue)' : 'var(--text)'}">${d.dueDate}</td>
+              <td style="color:${isOverdueDue(d.dueDate)?'var(--overdue)':'var(--ink)'};font-size:13px">${d.dueDate}</td>
               <td><span class="status-tag s-${d.status.replace(' ','-')}">${d.status}</span></td>
-            </tr>
-          `).join('') : '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No delegations yet</div></div></td></tr>'}</tbody>
+            </tr>`).join(''):'<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No delegations yet</div></div></td></tr>'}</tbody>
         </table>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
-// ────────────────────────────────────────────────────────────
-// DELEGATIONS TABLE
-// ────────────────────────────────────────────────────────────
-function loadDelegations() {
-  document.getElementById('delegationsBody').innerHTML = '<tr><td colspan="8"><div class="loader"><div class="spin"></div><span style="color:var(--muted)">Loading...</span></div></td></tr>';
-  gasCall('getAllDelegations', [], res => {
-    if (res.success) { allDelegations = res.data; renderDelegationsTable(res.data); }
-    else showToast('error', res.message);
-  });
+function loadDelegations(){
+  document.getElementById('delegationsBody').innerHTML='<tr><td colspan="8"><div class="loader"><div class="spin"></div><span style="color:var(--muted)">Loading...</span></div></td></tr>';
+  gasCall('getAllDelegations',[],res=>{if(res.success){allDelegations=res.data;renderDelegationsTable(res.data);}else showToast('error',res.message);});
 }
 
-function renderDelegationsTable(data) {
-  if (!data.length) {
-    document.getElementById('delegationsBody').innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No delegations found. Create one!</div></div></td></tr>';
-    return;
-  }
-  document.getElementById('delegationsBody').innerHTML = data.map(d => `
+function renderDelegationsTable(data){
+  if(!data.length){document.getElementById('delegationsBody').innerHTML='<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No delegations found. Create one!</div></div></td></tr>';return;}
+  document.getElementById('delegationsBody').innerHTML=data.map(d=>`
     <tr>
-      <td style="font-size:11px;color:var(--muted);white-space:nowrap">${d.id}</td>
-      <td>
-        <strong style="font-size:13px">${esc(d.title)}</strong>
-        <div style="font-size:11px;color:var(--muted)">${esc(d.category)}</div>
-      </td>
-      <td>
-        <div style="font-weight:500">${esc(d.delegatedTo)}</div>
-        <div style="font-size:11px;color:var(--muted)">By: ${esc(d.delegatedBy)}</div>
-      </td>
+      <td style="font-size:11px;color:var(--muted-2);white-space:nowrap;font-family:monospace">${d.id}</td>
+      <td><strong style="font-size:13px">${esc(d.title)}</strong><div style="font-size:11px;color:var(--muted)">${esc(d.category)}</div></td>
+      <td><div style="font-weight:600">${esc(d.delegatedTo)}</div><div style="font-size:11px;color:var(--muted)">By: ${esc(d.delegatedBy)}</div></td>
       <td><span class="priority-tag p-${d.priority}">● ${d.priority}</span></td>
-      <td style="color:${isOverdueDue(d.dueDate) && d.status !== 'Completed' ? 'var(--overdue)' : 'var(--muted)'};font-size:13px;white-space:nowrap">${d.dueDate}</td>
+      <td style="color:${isOverdueDue(d.dueDate)&&d.status!=='Completed'?'var(--overdue)':'var(--muted)'};font-size:13px;white-space:nowrap">${d.dueDate}</td>
       <td><span class="status-tag s-${d.status.replace(/ /g,'-')}">${d.status}</span></td>
-      <td>
-        <div style="display:flex;align-items:center;gap:6px">
-          <div class="progress-bar"><div class="progress-fill" style="width:${d.progress}%"></div></div>
-          <span style="font-size:11px;color:var(--muted)">${d.progress}%</span>
-        </div>
-      </td>
-      <td>
-        <div class="action-btns">
-          <button class="btn btn-ghost btn-sm" onclick="viewDetail('${d.id}')" title="View">👁</button>
-          <button class="btn btn-ghost btn-sm" onclick="openEditModal('${d.id}')" title="Edit">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteItem('${d.id}')" title="Delete">🗑</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
+      <td><div style="display:flex;align-items:center;gap:6px"><div class="progress-bar"><div class="progress-fill" style="width:${d.progress}%"></div></div><span style="font-size:11px;color:var(--muted)">${d.progress}%</span></div></td>
+      <td><div class="action-btns">
+        <button class="btn btn-ghost btn-sm" onclick="viewDetail('${d.id}')" title="View">👁</button>
+        <button class="btn btn-ghost btn-sm" onclick="openEditModal('${d.id}')" title="Edit">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('${d.id}')" title="Delete">🗑</button>
+      </div></td>
+    </tr>`).join('');
 }
 
-function filterTable() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  const st = document.getElementById('filterStatus').value;
-  const pr = document.getElementById('filterPriority').value;
-  const filtered = allDelegations.filter(d => {
-    const matchQ = !q || d.title.toLowerCase().includes(q) || d.delegatedTo.toLowerCase().includes(q) || d.id.toLowerCase().includes(q);
-    const matchSt = !st || d.status === st;
-    const matchPr = !pr || d.priority === pr;
-    return matchQ && matchSt && matchPr;
+function filterTable(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const st=document.getElementById('filterStatus').value;
+  const pr=document.getElementById('filterPriority').value;
+  const filtered=allDelegations.filter(d=>{
+    const mQ=!q||d.title.toLowerCase().includes(q)||d.delegatedTo.toLowerCase().includes(q)||d.id.toLowerCase().includes(q);
+    const mS=!st||d.status===st; const mP=!pr||d.priority===pr;
+    return mQ&&mS&&mP;
   });
   renderDelegationsTable(filtered);
 }
 
-// ────────────────────────────────────────────────────────────
-// MY TASKS (tasks assigned to current user - simplified)
-// ────────────────────────────────────────────────────────────
-function loadMyTasks() {
-  gasCall('getAllDelegations', [], res => {
-    if (!res.success) return;
-    const tasks = res.data;
-    if (!tasks.length) {
-      document.getElementById('myTasksBody').innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🎉</div><div class="empty-text">All caught up! No active tasks.</div></div></td></tr>';
-      return;
-    }
-    document.getElementById('myTasksBody').innerHTML = tasks.map(d => `
+function loadMyTasks(){
+  gasCall('getAllDelegations',[],res=>{
+    if(!res.success)return;
+    const tasks=res.data;
+    if(!tasks.length){document.getElementById('myTasksBody').innerHTML='<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🎉</div><div class="empty-text">All caught up! No active tasks.</div></div></td></tr>';return;}
+    document.getElementById('myTasksBody').innerHTML=tasks.map(d=>`
       <tr>
-        <td style="font-size:11px;color:var(--muted)">${d.id}</td>
+        <td style="font-size:11px;color:var(--muted-2);font-family:monospace">${d.id}</td>
         <td><strong>${esc(d.title)}</strong></td>
         <td>${esc(d.delegatedBy)}</td>
         <td><span class="priority-tag p-${d.priority}">● ${d.priority}</span></td>
@@ -1090,260 +1143,159 @@ function loadMyTasks() {
         <td><span class="status-tag s-${d.status.replace(/ /g,'-')}">${d.status}</span></td>
         <td><div style="display:flex;align-items:center;gap:6px"><div class="progress-bar"><div class="progress-fill" style="width:${d.progress}%"></div></div><span style="font-size:11px;color:var(--muted)">${d.progress}%</span></div></td>
         <td><div class="action-btns"><button class="btn btn-ghost btn-sm" onclick="openEditModal('${d.id}')">Update</button></div></td>
-      </tr>
-    `).join('');
+      </tr>`).join('');
   });
 }
 
-// ────────────────────────────────────────────────────────────
-// TEAM
-// ────────────────────────────────────────────────────────────
-function loadTeam() {
-  gasCall('getAllDelegations', [], dRes => {
-    const delegations = dRes.success ? dRes.data : [];
-    gasCall('getUsers', [], uRes => {
-      if (!uRes.success) return;
-      document.getElementById('teamBody').innerHTML = uRes.data.map(u => {
-        const active = delegations.filter(d => d.delegatedTo === u.name && d.status !== 'Completed').length;
-        return `
-          <tr>
-            <td style="font-family:monospace;color:var(--accent)">${u.id}</td>
-            <td><strong>${esc(u.name)}</strong></td>
-            <td><span style="background:var(--panel);padding:3px 8px;border-radius:6px;font-size:12px">${esc(u.department)}</span></td>
-            <td style="color:var(--muted);font-size:13px">${esc(u.role)}</td>
-            <td><span style="color:${active > 0 ? 'var(--inprogress)' : 'var(--muted)'};font-weight:600">${active} active</span></td>
-          </tr>
-        `;
+function loadTeam(){
+  gasCall('getAllDelegations',[],dRes=>{
+    const delegations=dRes.success?dRes.data:[];
+    gasCall('getUsers',[],uRes=>{
+      if(!uRes.success)return;
+      document.getElementById('teamBody').innerHTML=uRes.data.map(u=>{
+        const active=delegations.filter(d=>d.delegatedTo===u.name&&d.status!=='Completed').length;
+        return `<tr>
+          <td style="font-family:monospace;color:var(--accent);font-weight:600">${u.id}</td>
+          <td><strong>${esc(u.name)}</strong></td>
+          <td><span style="background:rgba(99,102,241,0.1);padding:4px 10px;border-radius:7px;font-size:12px;color:var(--accent);border:1px solid rgba(99,102,241,0.2)">${esc(u.department)}</span></td>
+          <td style="color:var(--muted);font-size:13px">${esc(u.role)}</td>
+          <td><span style="color:${active>0?'var(--inprogress)':'var(--muted)'};font-weight:700">${active} active</span></td>
+        </tr>`;
       }).join('');
     });
   });
 }
 
-// ────────────────────────────────────────────────────────────
-// AUDIT
-// ────────────────────────────────────────────────────────────
-function loadAudit() {
-  gasCall('getAuditLog', [], res => {
-    if (!res.success || !res.data.length) {
-      document.getElementById('auditList').innerHTML = '<div class="empty-state"><div class="empty-icon">📜</div><div class="empty-text">No audit records yet.</div></div>';
-      return;
-    }
-    document.getElementById('auditList').innerHTML = res.data.map(a => `
+function loadAudit(){
+  gasCall('getAuditLog',[],res=>{
+    if(!res.success||!res.data.length){document.getElementById('auditList').innerHTML='<div class="empty-state"><div class="empty-icon">📜</div><div class="empty-text">No audit records yet.</div></div>';return;}
+    document.getElementById('auditList').innerHTML=res.data.map(a=>`
       <div class="audit-item">
         <div class="audit-time">🕐 ${a.timestamp}</div>
         <div><span class="audit-action-badge audit-${a.action}">${a.action}</span></div>
-        <div>
-          <div style="font-weight:500;font-size:13px">${esc(a.details)}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">ID: ${a.delegationId} · By: ${esc(a.performedBy)}</div>
-        </div>
-      </div>
-    `).join('');
+        <div><div style="font-weight:600;font-size:13px">${esc(a.details)}</div><div style="font-size:11px;color:var(--muted);margin-top:3px">ID: ${a.delegationId} · By: ${esc(a.performedBy)}</div></div>
+      </div>`).join('');
   });
 }
 
-// ────────────────────────────────────────────────────────────
-// MODALS
-// ────────────────────────────────────────────────────────────
-function openCreateModal() {
-  document.getElementById('modalTitle').textContent = 'New Delegation';
-  document.getElementById('editId').value = '';
-  document.getElementById('f-title').value = '';
-  document.getElementById('f-desc').value = '';
-  document.getElementById('f-by').value = '';
-  document.getElementById('f-to').value = '';
-  document.getElementById('f-priority').value = 'Medium';
-  document.getElementById('f-category').value = 'General';
-  document.getElementById('f-due').value = '';
-  document.getElementById('f-notes').value = '';
-  document.getElementById('statusGroup').style.display = 'none';
-  document.getElementById('progressGroup').style.display = 'none';
-  document.getElementById('submitBtn').textContent = '🎯 Create Delegation';
+function openCreateModal(){
+  document.getElementById('modalTitle').textContent='New Delegation';
+  document.getElementById('editId').value='';
+  ['f-title','f-desc','f-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-by').value='';document.getElementById('f-to').value='';
+  document.getElementById('f-priority').value='Medium';document.getElementById('f-category').value='General';
+  document.getElementById('f-due').value='';
+  document.getElementById('statusGroup').style.display='none';
+  document.getElementById('progressGroup').style.display='none';
+  document.getElementById('submitBtn').textContent='🎯 Create Delegation';
   openModal('createModal');
 }
 
-function openEditModal(id) {
-  const d = allDelegations.find(x => x.id === id);
-  if (!d) { loadDelegations(); showToast('info', 'Loading data...'); return; }
-  document.getElementById('modalTitle').textContent = 'Edit Delegation';
-  document.getElementById('editId').value = id;
-  document.getElementById('f-title').value = d.title;
-  document.getElementById('f-desc').value = d.description;
-  document.getElementById('f-by').value = d.delegatedBy;
-  document.getElementById('f-to').value = d.delegatedTo;
-  document.getElementById('f-priority').value = d.priority;
-  document.getElementById('f-category').value = d.category;
-  document.getElementById('f-due').value = d.dueDate;
-  document.getElementById('f-notes').value = d.notes;
-  document.getElementById('f-status').value = d.status;
-  document.getElementById('f-progress').value = d.progress;
-  document.getElementById('progressVal').textContent = d.progress;
-  document.getElementById('statusGroup').style.display = 'flex';
-  document.getElementById('progressGroup').style.display = 'flex';
-  document.getElementById('submitBtn').textContent = '💾 Update Delegation';
+function openEditModal(id){
+  const d=allDelegations.find(x=>x.id===id);
+  if(!d){loadDelegations();showToast('info','Loading data...');return;}
+  document.getElementById('modalTitle').textContent='Edit Delegation';
+  document.getElementById('editId').value=id;
+  document.getElementById('f-title').value=d.title;document.getElementById('f-desc').value=d.description;
+  document.getElementById('f-by').value=d.delegatedBy;document.getElementById('f-to').value=d.delegatedTo;
+  document.getElementById('f-priority').value=d.priority;document.getElementById('f-category').value=d.category;
+  document.getElementById('f-due').value=d.dueDate;document.getElementById('f-notes').value=d.notes;
+  document.getElementById('f-status').value=d.status;document.getElementById('f-progress').value=d.progress;
+  document.getElementById('progressVal').textContent=d.progress;
+  document.getElementById('statusGroup').style.display='flex';
+  document.getElementById('progressGroup').style.display='flex';
+  document.getElementById('submitBtn').textContent='💾 Update Delegation';
   openModal('createModal');
 }
 
-function viewDetail(id) {
-  const d = allDelegations.find(x => x.id === id);
-  if (!d) return;
-  const isOverdue = isOverdueDue(d.dueDate) && d.status !== 'Completed';
-  document.getElementById('detailBody').innerHTML = `
+function viewDetail(id){
+  const d=allDelegations.find(x=>x.id===id); if(!d)return;
+  const isOD=isOverdueDue(d.dueDate)&&d.status!=='Completed';
+  document.getElementById('detailBody').innerHTML=`
     <div class="detail-grid">
-      <div class="detail-item full">
-        <div class="detail-key">Title</div>
-        <div class="detail-val" style="font-size:18px;font-family:'Syne',sans-serif">${esc(d.title)}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-key">Delegation ID</div>
-        <div class="detail-val" style="font-family:monospace;color:var(--accent);font-size:12px">${d.id}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-key">Status</div>
-        <div class="detail-val"><span class="status-tag s-${d.status.replace(/ /g,'-')}">${d.status}</span></div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-key">Delegated By</div>
-        <div class="detail-val">${esc(d.delegatedBy)}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-key">Delegated To</div>
-        <div class="detail-val">${esc(d.delegatedTo)}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-key">Priority</div>
-        <div class="detail-val"><span class="priority-tag p-${d.priority}">● ${d.priority}</span></div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-key">Category</div>
-        <div class="detail-val">${esc(d.category)}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-key">Due Date</div>
-        <div class="detail-val" style="color:${isOverdue ? 'var(--overdue)' : 'var(--text)'}">${d.dueDate} ${isOverdue ? '⚠️ OVERDUE' : ''}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-key">Progress</div>
-        <div class="detail-val">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="flex:1;height:8px;background:var(--panel);border-radius:4px;overflow:hidden">
-              <div style="width:${d.progress}%;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));border-radius:4px"></div>
-            </div>
-            <strong>${d.progress}%</strong>
-          </div>
-        </div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-key">Created</div>
-        <div class="detail-val" style="color:var(--muted)">${d.createdDate}</div>
-      </div>
-      ${d.description ? `<div class="detail-item full"><div class="detail-key">Description</div><div class="detail-val" style="line-height:1.6;color:var(--muted)">${esc(d.description)}</div></div>` : ''}
-      ${d.notes ? `<div class="detail-item full"><div class="detail-key">Notes</div><div class="detail-val" style="line-height:1.6;color:var(--muted)">${esc(d.notes)}</div></div>` : ''}
+      <div class="detail-item full"><div class="detail-key">Title</div><div class="detail-val" style="font-size:18px;font-family:'Clash Display',sans-serif">${esc(d.title)}</div></div>
+      <div class="detail-item"><div class="detail-key">Delegation ID</div><div class="detail-val" style="font-family:monospace;color:var(--accent);font-size:12px">${d.id}</div></div>
+      <div class="detail-item"><div class="detail-key">Status</div><div class="detail-val"><span class="status-tag s-${d.status.replace(/ /g,'-')}">${d.status}</span></div></div>
+      <div class="detail-item"><div class="detail-key">Delegated By</div><div class="detail-val">${esc(d.delegatedBy)}</div></div>
+      <div class="detail-item"><div class="detail-key">Delegated To</div><div class="detail-val">${esc(d.delegatedTo)}</div></div>
+      <div class="detail-item"><div class="detail-key">Priority</div><div class="detail-val"><span class="priority-tag p-${d.priority}">● ${d.priority}</span></div></div>
+      <div class="detail-item"><div class="detail-key">Category</div><div class="detail-val">${esc(d.category)}</div></div>
+      <div class="detail-item"><div class="detail-key">Due Date</div><div class="detail-val" style="color:${isOD?'var(--overdue)':'var(--ink)'}">${d.dueDate}${isOD?' ⚠️ OVERDUE':''}</div></div>
+      <div class="detail-item"><div class="detail-key">Progress</div><div class="detail-val"><div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:8px;background:rgba(99,102,241,0.1);border-radius:4px;overflow:hidden"><div style="width:${d.progress}%;height:100%;background:linear-gradient(90deg,var(--accent),#a5b4fc);border-radius:4px"></div></div><strong>${d.progress}%</strong></div></div></div>
+      <div class="detail-item"><div class="detail-key">Created</div><div class="detail-val" style="color:var(--muted)">${d.createdDate}</div></div>
+      ${d.description?`<div class="detail-item full"><div class="detail-key">Description</div><div class="detail-val" style="line-height:1.7;color:var(--muted)">${esc(d.description)}</div></div>`:''}
+      ${d.notes?`<div class="detail-item full"><div class="detail-key">Notes</div><div class="detail-val" style="line-height:1.7;color:var(--muted)">${esc(d.notes)}</div></div>`:''}
     </div>
     <div style="display:flex;gap:10px;margin-top:20px">
       <button class="btn btn-primary" onclick="closeModal('detailModal');openEditModal('${d.id}')">✏️ Edit</button>
       <button class="btn btn-danger" onclick="closeModal('detailModal');deleteItem('${d.id}')">🗑 Delete</button>
-    </div>
-  `;
+    </div>`;
   openModal('detailModal');
 }
 
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
 
-// ────────────────────────────────────────────────────────────
-// SUBMIT
-// ────────────────────────────────────────────────────────────
-function submitDelegation() {
-  const id = document.getElementById('editId').value;
-  const title = document.getElementById('f-title').value.trim();
-  const desc = document.getElementById('f-desc').value.trim();
-  const by = document.getElementById('f-by').value;
-  const to = document.getElementById('f-to').value;
-  const priority = document.getElementById('f-priority').value;
-  const category = document.getElementById('f-category').value;
-  const due = document.getElementById('f-due').value;
-  const notes = document.getElementById('f-notes').value.trim();
-
-  if (!title || !by || !to || !due) {
-    showToast('error', 'Please fill all required fields!');
-    return;
-  }
-
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.textContent = '⏳ Saving...';
-
-  if (!id) {
-    gasCall('createDelegation', [{ title, description: desc, delegatedBy: by, delegatedTo: to, priority, category, dueDate: due, notes }], res => {
-      btn.disabled = false; btn.textContent = '🎯 Create Delegation';
-      if (res.success) { closeModal('createModal'); showToast('success', res.message); loadDashboard(); if (currentView === 'delegations') loadDelegations(); }
-      else showToast('error', res.message);
+function submitDelegation(){
+  const id=document.getElementById('editId').value;
+  const title=document.getElementById('f-title').value.trim();
+  const desc=document.getElementById('f-desc').value.trim();
+  const by=document.getElementById('f-by').value;
+  const to=document.getElementById('f-to').value;
+  const priority=document.getElementById('f-priority').value;
+  const category=document.getElementById('f-category').value;
+  const due=document.getElementById('f-due').value;
+  const notes=document.getElementById('f-notes').value.trim();
+  if(!title||!by||!to||!due){showToast('error','Please fill all required fields!');return;}
+  const btn=document.getElementById('submitBtn'); btn.disabled=true; btn.textContent='⏳ Saving...';
+  if(!id){
+    gasCall('createDelegation',[{title,description:desc,delegatedBy:by,delegatedTo:to,priority,category,dueDate:due,notes}],res=>{
+      btn.disabled=false; btn.textContent='🎯 Create Delegation';
+      if(res.success){closeModal('createModal');showToast('success',res.message);loadDashboard();if(currentView==='delegations')loadDelegations();}
+      else showToast('error',res.message);
     });
   } else {
-    const status = document.getElementById('f-status').value;
-    const progress = document.getElementById('f-progress').value;
-    gasCall('updateDelegation', [{ id, title, description: desc, delegatedTo: to, priority, category, dueDate: due, status, progress, notes, updatedBy: by }], res => {
-      btn.disabled = false; btn.textContent = '💾 Update Delegation';
-      if (res.success) { closeModal('createModal'); showToast('success', res.message); loadDashboard(); if (currentView === 'delegations') loadDelegations(); }
-      else showToast('error', res.message);
+    const status=document.getElementById('f-status').value;
+    const progress=document.getElementById('f-progress').value;
+    gasCall('updateDelegation',[{id,title,description:desc,delegatedTo:to,priority,category,dueDate:due,status,progress,notes,updatedBy:by}],res=>{
+      btn.disabled=false; btn.textContent='💾 Update Delegation';
+      if(res.success){closeModal('createModal');showToast('success',res.message);loadDashboard();if(currentView==='delegations')loadDelegations();}
+      else showToast('error',res.message);
     });
   }
 }
 
-// ────────────────────────────────────────────────────────────
-// DELETE
-// ────────────────────────────────────────────────────────────
-function deleteItem(id) {
-  if (!confirm('Permanently delete this delegation? This cannot be undone.')) return;
-  gasCall('deleteDelegation', [id, 'MIS Executive'], res => {
-    if (res.success) { showToast('success', 'Delegation deleted.'); loadDashboard(); if (currentView === 'delegations') loadDelegations(); }
-    else showToast('error', res.message);
+function deleteItem(id){
+  if(!confirm('Permanently delete this delegation? This cannot be undone.'))return;
+  gasCall('deleteDelegation',[id,'MIS Executive'],res=>{
+    if(res.success){showToast('success','Delegation deleted.');loadDashboard();if(currentView==='delegations')loadDelegations();}
+    else showToast('error',res.message);
   });
 }
 
-// ────────────────────────────────────────────────────────────
-// EXPORT
-// ────────────────────────────────────────────────────────────
-function exportCSV() {
-  showToast('info', 'Preparing CSV export...');
-  gasCall('exportToCSV', [], res => {
-    if (!res.success) { showToast('error', res.message); return; }
-    const blob = new Blob([res.csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = res.filename; a.click();
-    URL.revokeObjectURL(url);
-    showToast('success', 'CSV downloaded!');
+function exportCSV(){
+  showToast('info','Preparing CSV export...');
+  gasCall('exportToCSV',[],res=>{
+    if(!res.success){showToast('error',res.message);return;}
+    const blob=new Blob([res.csv],{type:'text/csv'});
+    const url=URL.createObjectURL(blob); const a=document.createElement('a');
+    a.href=url; a.download=res.filename; a.click(); URL.revokeObjectURL(url);
+    showToast('success','CSV downloaded!');
   });
 }
 
-// ────────────────────────────────────────────────────────────
-// TOAST
-// ────────────────────────────────────────────────────────────
-function showToast(type, msg) {
-  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+function showToast(type,msg){
+  const icons={success:'✅',error:'❌',info:'ℹ️'};
+  const t=document.createElement('div'); t.className=`toast ${type}`;
+  t.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;
   document.getElementById('toastContainer').appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; t.style.transition = '0.3s'; setTimeout(() => t.remove(), 300); }, 3500);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(20px)';t.style.transition='0.3s';setTimeout(()=>t.remove(),300);},3500);
 }
 
-// ────────────────────────────────────────────────────────────
-// UTILS
-// ────────────────────────────────────────────────────────────
-function esc(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function esc(str){ return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function isOverdueDue(d){ if(!d)return false; return new Date(d)<new Date(new Date().toDateString()); }
 
-function isOverdueDue(dateStr) {
-  if (!dateStr) return false;
-  return new Date(dateStr) < new Date(new Date().toDateString());
-}
-
-// Close modal on overlay click
-document.querySelectorAll('.modal-overlay').forEach(o => {
-  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
-});
+document.querySelectorAll('.modal-overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});});
 </script>
 </body>
 </html>
