@@ -55,7 +55,7 @@ The system runs entirely within your **Google Workspace environment**, meaning a
 |------|------|---------|
 | `Code.gs` | Apps Script | Full backend — all logic, data ops, email, audit, export |
 | `index.html` | HTML / CSS / JS | Complete web UI — sidebar, dashboard, tables, modals |
-| `DelegateHub_README.md` | Markdown | This setup and reference guide |
+| `README.md` | Markdown | This setup and reference guide |
 
 ---
 
