@@ -4,6 +4,8 @@
 > MIS Executive Automation Tool · Reduce Manual Work by **80–90%**
 
 ---
+## Glance
+### Link [Click Me](https://script.google.com/macros/s/AKfycbxLkGVG9nZm4RefWD91Va-r_3R-u70-Zqc3wZHrFl9nD7vEL7N5VGse6AnO_PDQYqLy/exec)
 
 ## 📊 Quick Stats
 
